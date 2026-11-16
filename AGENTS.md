@@ -14,7 +14,9 @@ Compose) and publishes it to GitHub Pages:
   and font ×1.5; screens are always rendered at one phone size (412×915 dp) so they all look alike;
 - the captures are compared with the previous sprint: new screens, changed screens (with a
   before/after slider), unchanged screens;
-- the PRs merged during the sprint are listed and linked to the screens they touched;
+- the PRs merged during the sprint are listed and linked to the screens they touched; a screen
+  touched by a PR whose previews look identical is listed apart ("Touched without visible
+  change"): the change is in a state no `@Preview` shows;
 - a **demo mode** shows screens on a floating phone, state after state, with a hand that taps the
   element leading to the next state. The sprint demo ("Play the demo") shows only the normal use
   of new and changed screens; a card's "Play as demo" shows every state of that screen;
@@ -43,7 +45,7 @@ scripts/
   capture.sh                   One full capture of FestivAR at a ref, recorded in one sprint
   scan-previews.mjs            Finds @Preview functions, screen/component, fills the test template
   build-sprint.mjs             Turns captures into sprints/<id>.json (orchestration only)
-  sprint.mjs                   Tells the workflow the sprint of a date and if a baseline is needed
+  sprint.mjs                   Lists the dates a run captures (baseline, backfill, current)
   serve.mjs                    Local preview server
   lib/
     config.mjs                 Shared settings: repo, sprints, phone size, variants, thresholds
@@ -85,13 +87,15 @@ Generated, never committed on `main` (see `.gitignore`): `previews.json`, `site/
       one test; a failing preview only fails its own capture and is listed on the site;
    4. `build-sprint.mjs` stores the images, compares with the previous sprint, fetches the PRs
       and writes the sprint containing `<date>`.
-3. When no earlier sprint is saved yet (`scripts/sprint.mjs`), step 2 first runs for the last
-   commit before the current sprint started, so the first page already has comparisons.
+3. `scripts/sprint.mjs` decides which dates step 2 runs for, oldest first: normally only now;
+   when no earlier sprint is saved, also the end of the previous sprint (a baseline to compare
+   with); with the `backfill` input (a sprint number), the end of every sprint from that one on.
+   The oldest captured sprint with nothing before it is a "baseline sprint" (nothing new/changed).
 4. The history is pushed to the `data` branch, `site/` + `history/` (as `site/data/`) +
    `demo.json` are deployed to Pages.
 
-Triggers: the Friday schedule, the manual "Run workflow" button (optional date to rebuild a past
-sprint), and a push to `main` touching the site, scripts, capture test, `demo.json` or workflow.
+Triggers: the Friday schedule, the manual "Run workflow" button (optional `date` to rebuild a
+past sprint, optional `backfill` sprint number to (re)build older sprints first), and a push to `main` touching the site, scripts, capture test, `demo.json` or workflow.
 Every run is a full run (capture, compare, save, deploy); a run in a sprint that already has a
 build replaces that sprint. The Friday 07:30 run captures the sprint just before it ends at noon.
 
