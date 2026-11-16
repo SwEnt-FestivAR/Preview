@@ -1,6 +1,8 @@
 // Copied by scripts/scan-previews.mjs into a throwaway CI clone of FestivAR (never committed there).
 // Renders every @Preview of the app with Robolectric (no emulator) in a few variants and writes, for
 // each one, a PNG plus a JSON with the clickable areas (used by the "hand" of the demo mode).
+// Variant ids ("light", "dark", "font", "tablet") must match scripts/lib/config.mjs and site/js/util.js.
+// Output: build/weekly-demo/<previewId>__<variant>.png and .json ({ ok, w, h, taps } or { ok: false, error }).
 package weeklydemo
 
 import android.content.res.Configuration

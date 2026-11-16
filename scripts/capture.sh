@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Captures every @Preview of FestivAR at <ref> and records it as the week ending at <date>.
 # The FestivAR folder is a throwaway clone: the capture test is copied into it, never pushed.
+# Paths below (weeklydemo test folder, app/build/weekly-demo) match scripts/lib/config.mjs.
 # Usage: scripts/capture.sh <festivar-dir> <ref> <date> <history-dir>
 set -euo pipefail
 FA="$1"; REF="$2"; DATE="$3"; HIST="$4"
