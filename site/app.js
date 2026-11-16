@@ -195,3 +195,14 @@ const Demo = {
     if (location.hash.endsWith('/demo')) history.replaceState(null, '', '#' + week.id);
   },
 
+  toggleAuto() {
+    if (this.timer) return this.stopAuto();
+    $('#demo-auto').textContent = '⏸ Pause';
+    const tick = () => { this.timer = setTimeout(async () => { if (this.i >= this.steps.length - 1) return this.stopAuto(); await this.go(1); tick(); }, 3200); };
+    tick();
+  },
+  stopAuto() { clearTimeout(this.timer); this.timer = null; $('#demo-auto').textContent = '⏵ Auto'; },
+
+  cur() { return this.steps[this.i]; },
+  vOf(step) { return step.st.variants[this.variant] ? this.variant : 'light'; },
+
