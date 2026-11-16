@@ -31,3 +31,15 @@ function isoWeek(date) {
   const w = Math.ceil(((d - Date.UTC(y, 0, 1)) / 864e5 + 1) / 7);
   return `${y}-W${String(w).padStart(2, '0')}`;
 }
+
+const words = (s) => s.match(/[A-Z]+(?![a-z])|[A-Z]?[a-z]+|\d+/g) || [s];
+function stateLabels(fns) {
+  const split = fns.map((f) => words(f.replace(/Preview\d*$/, '')));
+  let common = 0;
+  if (split.length > 1)
+    while (split.every((w) => w[common] && w[common] === split[0][common] && w.length > common + 1)) common++;
+  return split.map((w) => {
+    const rest = w.slice(common).join(' ');
+    return split.length === 1 || !rest ? 'Par défaut' : rest;
+  });
+}
