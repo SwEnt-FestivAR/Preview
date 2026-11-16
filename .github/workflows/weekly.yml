@@ -4,9 +4,12 @@
 name: Weekly demo
 
 on:
+  # Friday 07:30 Swiss time. GitHub cron is UTC only, so both offsets are listed and the
+  # `when` job keeps the one matching the current Swiss offset (summer +02, winter +01).
   schedule:
-    - cron: "0 11 * * 5" # Friday 12:00/13:00 Swiss time
-  workflow_dispatch:
+    - cron: "30 5 * * 5"
+    - cron: "30 6 * * 5"
+  workflow_dispatch: # by hand: Actions -> Weekly demo -> Run workflow
     inputs:
       date:
         description: "Rebuild the week ending on this date (YYYY-MM-DD). Empty = now."
@@ -25,7 +28,26 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  when:
+    runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.check.outputs.go }}
+    steps:
+      - id: check
+        run: |
+          GO=true
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            OFFSET="$(TZ=Europe/Zurich date +%z)" # +0200 in summer, +0100 in winter
+            case "${{ github.event.schedule }}/$OFFSET" in
+              "30 5 * * 5/+0200"|"30 6 * * 5/+0100") GO=true ;;
+              *) GO=false ;;
+            esac
+          fi
+          echo "go=$GO" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: when
+    if: needs.when.outputs.go == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:

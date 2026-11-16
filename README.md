@@ -25,7 +25,7 @@ its states (for example `TaskDetailsOpenPreview`, `TaskDetailsDonePreview`).
 
 ## Weekly run
 
-Automatic, Friday around noon (Swiss time). Nothing to do by hand.
+Automatic, every Friday at 07:30 Swiss time (GitHub may start it a few minutes late). Nothing to do by hand.
 
 - Rebuild a week: Actions → *Weekly demo* → *Run workflow* (optional date `YYYY-MM-DD`).
 - The first run also captures the week before, so the first page already has comparisons.
