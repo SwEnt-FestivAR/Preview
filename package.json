@@ -1,0 +1,11 @@
+{
+  "name": "weekly-demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "serve": "node scripts/serve.mjs"
+  },
+  "dependencies": {
+    "pngjs": "7.0.0"
+  }
+}
