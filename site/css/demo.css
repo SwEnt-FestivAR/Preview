@@ -22,17 +22,17 @@
 .demo-caption .badge { display: inline-block; margin-top: 4px; }
 .float { grid-column: 3; position: relative; animation: float 6s ease-in-out infinite; perspective: 1400px; }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
-.device { position: relative; width: min(330px, 78vw); height: min(700px, 74vh); border-radius: 46px; background: #0b0b0b; padding: 12px; box-shadow: 0 0 0 2px #3a3a3a, 0 40px 80px rgba(0, 0, 0, 0.55), inset 0 0 0 2px #222; transform: rotateY(-8deg) rotateX(4deg); transition: transform 0.6s, width 0.5s, height 0.5s, border-radius 0.5s; }
-.device.tablet { width: min(760px, 60vw); height: min(560px, 60vh); border-radius: 30px; transform: rotateY(-4deg) rotateX(3deg); }
-.device.component { width: min(460px, 70vw); height: auto; min-height: 120px; border-radius: 22px; }
+/* Real phone proportions: 412x915 dp screen + 12 px bezel on each side. */
+.device { position: relative; height: min(80vh, 840px); width: auto; aspect-ratio: 436 / 939; border-radius: 46px; background: #0b0b0b; padding: 12px; box-shadow: 0 0 0 2px #3a3a3a, 0 40px 80px rgba(0, 0, 0, 0.55), inset 0 0 0 2px #222; transform: rotateY(-8deg) rotateX(4deg); transition: transform 0.6s, width 0.5s, height 0.5s, border-radius 0.5s; }
+/* A component shown alone: a large card instead of a phone, so small pieces stay readable. */
+.device.component { width: min(620px, 82vw); height: auto; aspect-ratio: auto; min-height: 120px; border-radius: 22px; transform: rotateY(-4deg) rotateX(2deg); }
 .device::before { content: ''; position: absolute; top: 20px; left: 50%; width: 80px; height: 22px; margin-left: -40px; background: #0b0b0b; border-radius: 12px; z-index: 3; }
-.device.tablet::before, .device.component::before { display: none; }
+.device.component::before { display: none; }
 .screen { position: relative; width: 100%; height: 100%; border-radius: 36px; overflow: hidden; background: #fff; }
-.device.tablet .screen { border-radius: 20px; }
-.device.component .screen { border-radius: 12px; height: auto; display: flex; justify-content: center; padding: 18px; }
+.device.component .screen { border-radius: 12px; height: auto; display: flex; justify-content: center; padding: 24px; }
 .screen img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: top center; transition: opacity 0.45s, transform 0.45s, clip-path 0.9s ease-in-out; }
-.device.component .screen img { position: relative; height: auto; max-height: 60vh; }
-.device.component .screen img + img { position: absolute; inset: 18px; width: calc(100% - 36px); }
+.device.component .screen img { position: relative; width: 100%; height: auto; max-height: 70vh; }
+.device.component .screen img + img { position: absolute; inset: 24px; width: calc(100% - 48px); }
 .screen img.enter { opacity: 0; transform: translateX(30px) scale(0.98); }
 .screen img.leave { opacity: 0; transform: translateX(-30px) scale(0.98); }
 .screen img.wipe { clip-path: inset(0 0 0 100%); }
@@ -57,8 +57,7 @@
   .float { grid-column: 2; grid-row: 2; justify-self: center; }
   .arrow.left { grid-column: 1; grid-row: 2; } .arrow.right { grid-column: 3; grid-row: 2; }
   .arrow { width: 44px; height: 44px; }
-  .device { height: min(560px, 62vh); width: min(270px, 64vw); }
-  .device.tablet { width: 72vw; height: 46vh; }
+  .device { height: min(64vh, 620px); }
 }
 
 .ba-tag { left: 16px; }
