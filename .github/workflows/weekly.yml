@@ -1,0 +1,26 @@
+# Every Friday: captures all FestivAR screens (read-only clone), compares them with last week,
+# saves the week on the `data` branch and publishes the demo site to GitHub Pages.
+# Requires Settings -> Pages -> Source = "GitHub Actions" on this repo.
+name: Weekly demo
+
+on:
+  schedule:
+    - cron: "0 11 * * 5" # Friday 12:00/13:00 Swiss time
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Rebuild the week ending on this date (YYYY-MM-DD). Empty = now."
+        required: false
+  push:
+    branches: [main]
+    paths: ["site/**", "demo.json"] # site-only change: republish without recapturing
+
+permissions:
+  contents: write # push the week to the `data` branch
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
