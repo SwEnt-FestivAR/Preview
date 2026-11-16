@@ -79,3 +79,14 @@ const prevEntry = index.filter((w) => w.id < weekId).sort((a, b) => b.id.localeC
 const prev = prevEntry ? JSON.parse(fs.readFileSync(path.join(history, 'weeks', prevEntry.id + '.json'), 'utf8')) : null;
 const prevStates = {};
 for (const s of prev?.screens || []) for (const st of s.states) prevStates[st.id] = st;
+
+function diffRatio(a, b) {
+  if (a === b) return 0;
+  const A = PNG.sync.read(fs.readFileSync(path.join(history, 'shots', a + '.png')));
+  const B = PNG.sync.read(fs.readFileSync(path.join(history, 'shots', b + '.png')));
+  if (A.width !== B.width || A.height !== B.height) return 1;
+  let n = 0;
+  for (let i = 0; i < A.data.length; i += 4)
+    if (Math.abs(A.data[i] - B.data[i]) + Math.abs(A.data[i + 1] - B.data[i + 1]) + Math.abs(A.data[i + 2] - B.data[i + 2]) > 24) n++;
+  return n / (A.width * A.height);
+}
