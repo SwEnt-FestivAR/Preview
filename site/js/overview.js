@@ -1,25 +1,35 @@
-// The scrolling page: sprint header, stats, new and changed screens, PRs, other screens.
-import { $, h, esc, shotUrl, shortDate, prLink, STATUS } from './util.js';
+// The scrolling page: sprint header, stats, then every screen and component of the sprint as a
+// card (states, variants, before/after, its own demo), grouped by what happened to it, then PRs.
+import { h, esc, shortDate } from './util.js';
 import { screenCard } from './card.js';
 
 /**
  * Renders a sprint into `main`. `openDemo(screens?)` starts the demo mode, on the given screens
- * or on the whole sprint.
+ * (every state) or, without argument, the sprint demo (notable changes only).
  */
 export function renderOverview(main, sprint, openDemo) {
-  const byStatus = (status, kind) => sprint.screens.filter((s) => s.status === status && (!kind || s.kind === kind));
+  const of = (kind, test) => sprint.screens.filter((s) => s.kind === kind && test(s));
+  const isNew = (s) => s.status === 'new';
+  const isChanged = (s) => s.status === 'changed';
+  // Touched by a PR but pixel-identical: the change is in a state no @Preview shows. Meaningless on
+  // a baseline sprint, where nothing is compared.
+  const isTouched = (s) => Boolean(sprint.previous) && s.status === 'same' && s.prs.length > 0;
+  const isUnchanged = (s) => s.status === 'same' && !isTouched(s);
+  const baseline = 'Baseline sprint: there is no earlier sprint to compare with.';
+  const groups = [
+    ['New screens', 'Added this sprint, with all their states and variants.', of('screen', isNew), sprint.previous ? 'Nothing this sprint.' : baseline],
+    ['Changed screens', 'Drag the slider to compare with the previous sprint.', of('screen', isChanged), sprint.previous ? 'Nothing this sprint.' : baseline],
+    ['New and changed components', 'Small UI pieces.', of('component', (s) => isNew(s) || isChanged(s))],
+    ['Touched without visible change', 'A PR of this sprint changed these files, but their previews look the same: the change is in a state no @Preview shows (a dialog, a saving state...). Adding a preview for it makes it appear as changed.', sprint.screens.filter(isTouched)],
+    [sprint.previous ? 'Unchanged screens' : 'All screens', 'Every captured screen, with all its states.', of('screen', isUnchanged)],
+    [sprint.previous ? 'Unchanged components' : 'All components', '', of('component', isUnchanged)],
+  ];
   main.innerHTML = '';
   main.append(header(sprint), stats(sprint.stats));
-  main.append(section('New screens', 'Added this sprint, with all their states and variants.', byStatus('new', 'screen'), sprint, openDemo));
-  main.append(section('Changed screens', 'Drag the slider to compare with the previous sprint.', byStatus('changed', 'screen'), sprint, openDemo));
-  const components = [...byStatus('new', 'component'), ...byStatus('changed', 'component')];
-  if (components.length) main.append(section('Components', 'Small UI pieces that are new or changed.', components, sprint, openDemo));
-  // Touched by a PR but pixel-identical: the change is in a state no @Preview shows.
-  const touched = byStatus('same').filter((s) => s.prs.length);
-  if (touched.length) main.append(touchedScreens(touched, sprint.repo, openDemo));
+  for (const [title, subtitle, screens, emptyText] of groups) {
+    if (screens.length || emptyText) main.append(section(title, subtitle, screens, emptyText, sprint, openDemo));
+  }
   main.append(pullRequests(sprint));
-  const same = byStatus('same');
-  if (same.length) main.append(otherScreens(same, openDemo));
   if (sprint.removed.length) {
     main.append(h(`<section><h2>Removed</h2><p class="sub">${sprint.removed.map(esc).join(', ')}</p></section>`));
   }
@@ -45,11 +55,11 @@ function stats(s) {
     ${tile(s.prs, 'merged PRs')}${tile(s.contributors, 'contributors')}${tile(s.screens, 'screens captured')}</div>`);
 }
 
-function section(title, subtitle, screens, sprint, openDemo) {
-  const sec = h(`<section><h2>${title}</h2><p class="sub">${subtitle}</p></section>`);
+/** A titled grid of screen cards, or `emptyText` when there are none. */
+function section(title, subtitle, screens, emptyText, sprint, openDemo) {
+  const sec = h(`<section><h2>${title}</h2>${subtitle ? `<p class="sub">${subtitle}</p>` : ''}</section>`);
   if (!screens.length) {
-    const text = sprint.previous ? 'Nothing this sprint.' : 'Baseline sprint: there is no earlier sprint to compare with.';
-    sec.append(h(`<p class="empty">${text}</p>`));
+    sec.append(h(`<p class="empty">${emptyText}</p>`));
     return sec;
   }
   const grid = h('<div class="grid"></div>');
@@ -71,35 +81,6 @@ function pullRequests(sprint) {
       <a class="title" href="${esc(p.url)}">${esc(p.title)}</a>${tag}<span class="who">${esc(p.author)}</span></div>`;
   });
   sec.append(h(`<div class="pr-list">${rows.join('')}</div>`));
-  return sec;
-}
-
-/** Grid of small screenshots; `extra(screen)` adds a line of HTML under the title. */
-function thumbs(screens, openDemo, extra = () => '') {
-  const grid = h('<div class="thumbs"></div>');
-  for (const screen of screens) {
-    const n = screen.states.length;
-    const thumb = h(`<div class="thumb" role="button" tabindex="0">
-      <img loading="lazy" src="${shotUrl(screen.states[0].variants.light.img)}" alt="">
-      <b>${esc(screen.title)}</b><br><span class="muted">${n} state${n > 1 ? 's' : ''}</span>${extra(screen)}</div>`);
-    thumb.onclick = (e) => e.target.tagName !== 'A' && openDemo([screen]);
-    grid.append(thumb);
-  }
-  return grid;
-}
-
-function touchedScreens(screens, repo, openDemo) {
-  const sec = h(`<section><h2>Touched without visible change</h2>
-    <p class="sub">A PR of this sprint changed these files, but their previews look the same: the change is
-    in a state no @Preview shows (a dialog, a saving state...). Adding a preview for it makes it appear here.</p></section>`);
-  sec.append(thumbs(screens, openDemo, (s) => `<br><span class="prs-inline">PRs ${s.prs.map((n) => prLink(repo, n)).join(' ')}</span>`));
-  return sec;
-}
-
-function otherScreens(screens, openDemo) {
-  const sec = h(`<section><details><summary>All other screens (${screens.length}, ${STATUS.same.toLowerCase()})</summary>
-    </details></section>`);
-  $('details', sec).append(thumbs(screens, openDemo));
   return sec;
 }
 
