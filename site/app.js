@@ -153,3 +153,45 @@ function card(sc) {
   return el;
 }
 
+// ------------------------------------------------------------------ demo mode
+const Demo = {
+  steps: [], i: 0, variant: 'light', busy: false, timer: null,
+
+  open(list) {
+    const ov = (sc) => overrides[sc.group] || {};
+    let screens = list || week.screens.filter((s) => s.status !== 'same');
+    this.intro = !list;
+    if (!screens.length) screens = week.screens.filter((s) => s.kind === 'screen');
+    screens = screens.filter((s) => list || !ov(s).skip)
+      .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'screen' ? -1 : 1));
+    this.steps = [];
+    for (const sc of screens) {
+      const order = ov(sc).order || [];
+      const states = [...sc.states].sort((a, b) => (order.indexOf(a.fn) + 1 || 99) - (order.indexOf(b.fn) + 1 || 99));
+      states.forEach((st, k) => this.steps.push({ sc, st, k, n: states.length, diff: st.status === 'changed' && st.before }));
+    }
+    this.i = 0;
+    this.variant = 'light';
+    $('#demo').hidden = false;
+    document.body.style.overflow = 'hidden';
+    $('#prev').onclick = () => this.go(-1);
+    $('#next').onclick = () => this.go(1);
+    $('#demo-close').onclick = () => this.close();
+    $('#demo-auto').onclick = () => this.toggleAuto();
+    document.onkeydown = (e) => {
+      if ($('#demo').hidden) return;
+      if (e.key === 'ArrowRight') this.go(1);
+      else if (e.key === 'ArrowLeft') this.go(-1);
+      else if (e.key === 'Escape') this.close();
+      else if (e.key === ' ') { e.preventDefault(); this.toggleAuto(); }
+    };
+    this.show(true);
+  },
+
+  close() {
+    this.stopAuto();
+    $('#demo').hidden = true;
+    document.body.style.overflow = '';
+    if (location.hash.endsWith('/demo')) history.replaceState(null, '', '#' + week.id);
+  },
+
