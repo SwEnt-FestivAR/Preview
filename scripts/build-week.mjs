@@ -67,3 +67,8 @@ for (const p of previews) {
     (shotOf[p.id] ||= {})[v] = { img: sha, w: meta.w, h: meta.h, taps: meta.taps.filter((t) => t.w > 0 && t.h > 0) };
   }
 }
+
+// A variant that renders exactly like the light one (e.g. a preview forcing its theme) adds nothing.
+for (const vs of Object.values(shotOf))
+  for (const v of Object.keys(vs)) if (v !== 'light' && vs.light && vs[v].img === vs.light.img) delete vs[v];
+
