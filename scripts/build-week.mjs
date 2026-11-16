@@ -43,3 +43,27 @@ function stateLabels(fns) {
     return split.length === 1 || !rest ? 'Par défaut' : rest;
   });
 }
+
+// ---- 1. store this run's images ------------------------------------------------------------------
+const failed = [];
+const shotOf = {};
+for (const p of previews) {
+  for (const v of p.variants) {
+    const base = path.join(captures, `${p.id}__${v}`);
+    let meta;
+    try {
+      meta = JSON.parse(fs.readFileSync(base + '.json', 'utf8'));
+    } catch {
+      meta = { ok: false, error: 'not captured (test did not run)' };
+    }
+    if (!meta.ok || !fs.existsSync(base + '.png')) {
+      failed.push({ id: p.id, variant: v, error: meta.error });
+      continue;
+    }
+    const buf = fs.readFileSync(base + '.png');
+    const sha = crypto.createHash('sha1').update(buf).digest('hex').slice(0, 16);
+    const dest = path.join(history, 'shots', sha + '.png');
+    if (!fs.existsSync(dest)) fs.writeFileSync(dest, buf);
+    (shotOf[p.id] ||= {})[v] = { img: sha, w: meta.w, h: meta.h, taps: meta.taps.filter((t) => t.w > 0 && t.h > 0) };
+  }
+}
