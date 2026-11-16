@@ -53,3 +53,13 @@ export const variantsFor = (p) => (p.kind === 'screen' ? ['light', 'dark', 'font
 for (const p of previews) p.variants = variantsFor(p);
 
 fs.writeFileSync(outFile, JSON.stringify(previews, null, 2));
+
+const k = (s) => JSON.stringify(s).replaceAll('$', '\\$');
+const shots = previews
+  .flatMap((p) => p.variants.map((v) => `Shot(${k(p.id)}, ${k(p.cls)}, ${k(p.fn)}, ${p.w}, ${p.h}, ${p.bg}, ${k(v)}),`))
+  .join('\n            ');
+const tmpl = fs.readFileSync(path.join(here, '../capture/WeeklyDemoCapture.kt'), 'utf8');
+const dest = path.join(festivar, 'app/src/test/java/weeklydemo/WeeklyDemoCapture.kt');
+fs.mkdirSync(path.dirname(dest), { recursive: true });
+fs.writeFileSync(dest, tmpl.replace('/*SHOTS*/', shots));
+console.log(`${previews.length} previews, ${previews.reduce((n, p) => n + p.variants.length, 0)} captures planned`);
