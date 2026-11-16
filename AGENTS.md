@@ -20,6 +20,8 @@ Compose) and publishes it to GitHub Pages:
 - a **demo mode** shows screens on a floating phone, state after state, with a hand that taps the
   element leading to the next state. The sprint demo ("Play the demo") shows only the normal use
   of new and changed screens; a card's "Play as demo" shows every state of that screen;
+- the page shows **every** screen and component of the sprint as a card (states, variants,
+  before/after, its own demo), grouped: new, changed, touched without visible change, unchanged;
 - the page has a light/dark toggle and links to the previous sprint's demo.
 
 ## Golden rules
@@ -48,7 +50,7 @@ scripts/
   sprint.mjs                   Lists the dates a run captures (baseline, backfill, current)
   serve.mjs                    Local preview server
   lib/
-    config.mjs                 Shared settings: repo, sprints, phone size, variants, thresholds
+    config.mjs                 Shared settings: repo, sprints, first sprint, phone size, variants
     sprints.mjs                Sprint calendar (Friday 12:00 Swiss -> Friday 12:00)
     names.mjs                  Readable names and state labels
     shots.mjs                  Stores images by content hash, pixel diff
@@ -89,13 +91,16 @@ Generated, never committed on `main` (see `.gitignore`): `previews.json`, `site/
       and writes the sprint containing `<date>`.
 3. `scripts/sprint.mjs` decides which dates step 2 runs for, oldest first: normally only now;
    when no earlier sprint is saved, also the end of the previous sprint (a baseline to compare
-   with); with the `backfill` input (a sprint number), the end of every sprint from that one on.
+   with); with the `backfill` input (a sprint number), the end of every sprint from that one on;
+   on a **push**, every sprint from `FIRST_SPRINT` (`scripts/lib/config.mjs`, today 4) on.
    The oldest captured sprint with nothing before it is a "baseline sprint" (nothing new/changed).
 4. The history is pushed to the `data` branch, `site/` + `history/` (as `site/data/`) +
    `demo.json` are deployed to Pages.
 
 Triggers: the Friday schedule, the manual "Run workflow" button (optional `date` to rebuild a
-past sprint, optional `backfill` sprint number to (re)build older sprints first), and a push to `main` touching the site, scripts, capture test, `demo.json` or workflow.
+past sprint, optional `backfill` sprint number to (re)build older sprints first), and a push to
+`main` touching the site, scripts, capture test, `demo.json` or workflow (it rebuilds all sprints
+from `FIRST_SPRINT`, about 4-5 minutes of capture per sprint).
 Every run is a full run (capture, compare, save, deploy); a run in a sprint that already has a
 build replaces that sprint. The Friday 07:30 run captures the sprint just before it ends at noon.
 

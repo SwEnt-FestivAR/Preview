@@ -36,7 +36,8 @@ Nothing to do by hand.
 - Add older sprints: same button with *backfill* = a sprint number (e.g. `4`): every sprint from
   that one on is captured again, oldest first, and the oldest becomes the reference.
 - The first run also captures the end of the previous sprint, so the first page already has comparisons.
-- Every run is complete (captures included), including runs started by a push to `main`.
+- Every run is complete (captures included). A push to `main` rebuilds every sprint from Sprint 4
+  (`FIRST_SPRINT` in `scripts/lib/config.mjs`), the reference, to the current one.
 
 Setup, once: Settings → Pages → Source = **GitHub Actions**.
 
