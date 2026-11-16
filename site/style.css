@@ -155,3 +155,19 @@ details summary { cursor: pointer; font-weight: 500; }
 .target { position: absolute; z-index: 3; border: 2px solid #fac775; border-radius: 10px; box-shadow: 0 0 0 4px rgba(250, 199, 117, 0.25); pointer-events: none; animation: pulse 1s ease-in-out infinite; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 9px rgba(250, 199, 117, 0.1); } }
 
+@media (max-width: 900px) {
+  .demo-stage { grid-template-columns: 48px 1fr 48px; grid-template-rows: auto 1fr; gap: 12px; }
+  .demo-caption { grid-column: 1 / -1; grid-row: 1; justify-self: center; text-align: center; }
+  .demo-caption h2 { font-size: 24px; }
+  .float { grid-column: 2; grid-row: 2; justify-self: center; }
+  .arrow.left { grid-column: 1; grid-row: 2; } .arrow.right { grid-column: 3; grid-row: 2; }
+  .arrow { width: 44px; height: 44px; }
+  .device { height: min(560px, 62vh); width: min(270px, 64vw); }
+  .device.tablet { width: 72vw; height: 46vh; }
+}
+@media (max-width: 520px) {
+  .grid { grid-template-columns: 1fr; }
+  .brand .muted, #play .long { display: none; }
+  .top-actions select { max-width: 130px; }
+  .top-actions button { white-space: nowrap; }
+}
