@@ -117,3 +117,20 @@ class WeeklyDemoCapture(private val s: Shot) {
       val bmp = root.captureToImage().asAndroidBitmap()
       File(out, "$base.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
 
+      val rootNode = root.fetchSemanticsNode()
+      val rw = rootNode.size.width.toFloat().coerceAtLeast(1f)
+      val rh = rootNode.size.height.toFloat().coerceAtLeast(1f)
+      val taps =
+          rule
+              .onAllNodes(hasClickAction())
+              .fetchSemanticsNodes(atLeastOneRootRequired = false)
+              .filter { it.root == rootNode.root }
+              .map { n ->
+                val b = n.boundsInRoot
+                val label =
+                    n.config.getOrNull(SemanticsProperties.Text)?.joinToString(" ") { it.text }
+                        ?: n.config.getOrNull(SemanticsProperties.ContentDescription)?.joinToString(" ")
+                        ?: ""
+                "{\"x\":${b.left / rw},\"y\":${b.top / rh},\"w\":${b.width / rw}," +
+                    "\"h\":${b.height / rh},\"label\":${json(label)}}"
+              }
