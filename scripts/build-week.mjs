@@ -162,3 +162,21 @@ const stats = {
   contributors: new Set(prs.map((p) => p.author)).size,
   failed: failed.length,
 };
+const week = {
+  id: weekId,
+  start: start.toISOString(),
+  end: end.toISOString(),
+  commit: args.commit || null,
+  repo: REPO,
+  previous: prev?.id || null,
+  stats,
+  screens,
+  removed,
+  prs,
+  failed,
+};
+fs.writeFileSync(path.join(history, 'weeks', weekId + '.json'), JSON.stringify(week));
+const entry = { id: weekId, start: week.start, end: week.end, commit: week.commit, stats };
+const next = index.filter((w) => w.id !== weekId).concat(entry).sort((a, b) => b.id.localeCompare(a.id));
+fs.writeFileSync(indexFile, JSON.stringify(next, null, 2));
+console.log(weekId, JSON.stringify(stats));
