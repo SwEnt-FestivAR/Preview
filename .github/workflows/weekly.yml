@@ -14,9 +14,9 @@ on:
       date:
         description: "Rebuild the week ending on this date (YYYY-MM-DD). Empty = now."
         required: false
-  push:
+  push: # a change to this repo rebuilds the current week in full (captures included)
     branches: [main]
-    paths: ["site/**", "demo.json"] # site-only change: republish without recapturing
+    paths: ["site/**", "scripts/**", "capture/**", "demo.json", ".github/workflows/**"]
 
 permissions:
   contents: write # push the week to the `data` branch
@@ -70,21 +70,17 @@ jobs:
           fi
 
       - name: Set up Java
-        if: github.event_name != 'push'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
       - name: Set up Gradle
-        if: github.event_name != 'push'
         uses: gradle/actions/setup-gradle@v4
 
       - name: Clone FestivAR (read-only)
-        if: github.event_name != 'push'
         run: git clone https://github.com/SwEnt-FestivAR/FestivAR.git festivar
 
       - name: Capture this week
-        if: github.event_name != 'push'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -100,7 +96,6 @@ jobs:
           bash scripts/capture.sh festivar "$REF" "$DATE" history
 
       - name: Save the history
-        if: github.event_name != 'push'
         working-directory: history
         run: |
           git config user.name "github-actions[bot]"
