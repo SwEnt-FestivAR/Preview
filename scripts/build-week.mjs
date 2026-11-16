@@ -116,3 +116,12 @@ const screens = Object.entries(groups).map(([group, ps]) => {
   return { group, file: ps[0].file, kind: ps[0].kind, status, prs: [], states };
 });
 const removed = (prev?.screens || []).filter((s) => !groups[s.group]).map((s) => s.group);
+
+// ---- 3. merged PRs of the week -------------------------------------------------------------------
+async function gh(url) {
+  const headers = { Accept: 'application/vnd.github+json', 'User-Agent': 'weekly-demo' };
+  if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  const r = await fetch('https://api.github.com' + url, { headers });
+  if (!r.ok) throw new Error(`${url}: ${r.status}`);
+  return r.json();
+}
