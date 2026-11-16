@@ -16,3 +16,33 @@ const fmtDate = (iso) => new Date(iso).toLocaleDateString('fr-CH', { day: 'numer
 let week = null;
 let overrides = {};
 
+async function getJSON(p) {
+  const r = await fetch(DATA + p, { cache: 'no-cache' });
+  if (!r.ok) throw new Error(p + ': ' + r.status);
+  return r.json();
+}
+
+async function init() {
+  let index;
+  try {
+    index = await getJSON('index.json');
+  } catch {
+    $('#main').innerHTML = '<p class="empty">Pas encore de semaine construite. Lance le workflow « Weekly demo » une première fois.</p>';
+    return;
+  }
+  try { overrides = await getJSON('demo.json'); } catch { overrides = {}; }
+  const sel = $('#week');
+  sel.innerHTML = index.map((w) => `<option value="${w.id}">Semaine ${+w.id.split('-W')[1]} · ${w.id.slice(0, 4)}</option>`).join('');
+  const [hashWeek, hashMode] = location.hash.slice(1).split('/');
+  sel.value = index.some((w) => w.id === hashWeek) ? hashWeek : index[0].id;
+  sel.onchange = () => { location.hash = sel.value; load(sel.value); };
+  $('#play').onclick = () => Demo.open();
+  await load(sel.value);
+  if (hashMode === 'demo') Demo.open();
+}
+
+async function load(id) {
+  week = await getJSON(`weeks/${id}.json`);
+  render();
+}
+
