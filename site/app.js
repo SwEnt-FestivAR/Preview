@@ -206,3 +206,15 @@ const Demo = {
   cur() { return this.steps[this.i]; },
   vOf(step) { return step.st.variants[this.variant] ? this.variant : 'light'; },
 
+  async go(d) {
+    const j = this.i + d;
+    if (this.busy || j < 0 || j >= this.steps.length) return;
+    const a = this.cur(), b = this.steps[j];
+    this.busy = true;
+    if (d > 0 && a.sc === b.sc) await this.tap(a, b);
+    this.i = j;
+    this.show(false, d);
+    this.busy = false;
+  },
+
+  // Finger moves to the element most likely to lead to the next state, taps, then we switch.
