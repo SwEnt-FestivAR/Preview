@@ -61,3 +61,19 @@ jobs:
         if: github.event_name != 'push'
         run: git clone https://github.com/SwEnt-FestivAR/FestivAR.git festivar
 
+      - name: Capture this week
+        if: github.event_name != 'push'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DATE="${{ github.event.inputs.date }}"
+          DATE="${DATE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
+          # Very first run: also capture one week earlier, so there is something to compare with.
+          if [ ! -f history/index.json ]; then
+            PREV_DATE="$(date -u -d "$DATE - 7 days" +%Y-%m-%dT%H:%M:%SZ)"
+            PREV_REF="$(git -C festivar rev-list -1 --before="$PREV_DATE" origin/main)"
+            bash scripts/capture.sh festivar "$PREV_REF" "$PREV_DATE" history
+          fi
+          REF="$(git -C festivar rev-list -1 --before="$DATE" origin/main)"
+          bash scripts/capture.sh festivar "$REF" "$DATE" history
+
