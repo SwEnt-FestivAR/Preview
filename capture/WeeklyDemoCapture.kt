@@ -1,7 +1,7 @@
 // Copied by scripts/scan-previews.mjs into a throwaway CI clone of FestivAR (never committed there).
 // Renders every @Preview of the app with Robolectric (no emulator) in a few variants and writes, for
 // each one, a PNG plus a JSON with the clickable areas (used by the "hand" of the demo mode).
-// Variant ids ("light", "dark", "font", "tablet") must match scripts/lib/config.mjs and site/js/util.js.
+// Variant ids ("light", "dark", "font") must match scripts/lib/config.mjs and site/js/util.js.
 // Output: build/weekly-demo/<previewId>__<variant>.png and .json ({ ok, w, h, taps } or { ok: false, error }).
 package weeklydemo
 
@@ -51,7 +51,8 @@ class Shot(
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [34], qualifiers = "w1000dp-h1300dp-xhdpi")
+// Window large enough for a 412x915 dp phone screen; xhdpi = 2 px per dp.
+@Config(sdk = [34], qualifiers = "w480dp-h1000dp-xhdpi")
 class WeeklyDemoCapture(private val s: Shot) {
   @get:Rule val rule = createComposeRule()
 
@@ -74,7 +75,6 @@ class WeeklyDemoCapture(private val s: Shot) {
       val method = Class.forName(s.cls).getDeclaredComposableMethod(s.fn)
       method.asMethod().isAccessible = true
       val night = s.variant == "dark"
-      val tablet = s.variant == "tablet"
       rule.mainClock.autoAdvance = false
       rule.setContent {
         val cfg =
@@ -84,24 +84,15 @@ class WeeklyDemoCapture(private val s: Shot) {
                       (if (night) Configuration.UI_MODE_NIGHT_YES
                       else Configuration.UI_MODE_NIGHT_NO)
               if (s.variant == "font") fontScale = 1.5f
-              if (tablet) {
-                screenWidthDp = 1000
-                screenHeightDp = 720
-                smallestScreenWidthDp = 720
-              }
             }
         val density = LocalDensity.current.density
         CompositionLocalProvider(
             LocalConfiguration provides cfg,
             LocalDensity provides Density(density, cfg.fontScale),
         ) {
-          var mod =
-              when {
-                tablet -> Modifier.size(1000.dp, 720.dp)
-                s.h > 0 -> Modifier.size(s.w.dp, s.h.dp)
-                else -> Modifier.width(s.w.dp)
-              }
-          if (s.bg) mod = mod.background(if (night) Color(0xFF121212) else Color.White)
+          // Screens get a fixed phone size (h > 0) and always a background; components wrap.
+          var mod = if (s.h > 0) Modifier.size(s.w.dp, s.h.dp) else Modifier.width(s.w.dp)
+          if (s.bg || s.h > 0) mod = mod.background(if (night) Color(0xFF121212) else Color.White)
           Box(mod) { method.invoke(currentComposer, null) }
         }
       }
