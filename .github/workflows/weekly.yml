@@ -14,6 +14,9 @@ on:
       date:
         description: "Rebuild the sprint containing this date (YYYY-MM-DD). Empty = now."
         required: false
+      backfill:
+        description: "Also (re)build every sprint from this sprint number on, oldest first (e.g. 4). Empty = no."
+        required: false
   push: # a change to this repo rebuilds the current sprint in full (captures included)
     branches: [main]
     paths: ["site/**", "scripts/**", "capture/**", "demo.json", ".github/workflows/**"]
@@ -49,7 +52,7 @@ jobs:
     needs: when
     if: needs.when.outputs.go == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120 # a backfill of several sprints captures FestivAR several times
     steps:
       - uses: actions/checkout@v4
 
@@ -86,14 +89,11 @@ jobs:
         run: |
           DATE="${{ github.event.inputs.date }}"
           DATE="${DATE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
-          eval "$(node scripts/sprint.mjs "$DATE" history)" # SPRINT, NEED_BASELINE, BASELINE_DATE
-          # No earlier sprint saved: first capture the end of the previous sprint, to compare with.
-          if [ "$NEED_BASELINE" = true ]; then
-            BASE_REF="$(git -C festivar rev-list -1 --before="$BASELINE_DATE" origin/main)"
-            bash scripts/capture.sh festivar "$BASE_REF" "$BASELINE_DATE" history
-          fi
-          REF="$(git -C festivar rev-list -1 --before="$DATE" origin/main)"
-          bash scripts/capture.sh festivar "$REF" "$DATE" history
+          # Dates to capture, oldest first: a baseline or backfilled sprints, then this one.
+          for AT in $(node scripts/sprint.mjs "$DATE" history "${{ github.event.inputs.backfill }}"); do
+            REF="$(git -C festivar rev-list -1 --before="$AT" origin/main)"
+            bash scripts/capture.sh festivar "$REF" "$AT" history
+          done
 
       - name: Save the history
         working-directory: history

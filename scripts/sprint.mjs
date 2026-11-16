@@ -1,17 +1,24 @@
-// Tells the workflow whether a baseline capture is needed before capturing <date>.
-// Prints shell assignments, to be used with eval:
-//   SPRINT=<n>             sprint containing <date>
-//   NEED_BASELINE=true     no earlier sprint saved yet: capture the previous sprint first
-//   BASELINE_DATE=<iso>    one minute before this sprint starts (= end of the previous sprint)
-// Usage: node scripts/sprint.mjs <date> <history-dir>
-import { sprintOf } from './lib/sprints.mjs';
+// Prints the capture dates a run must process, oldest first, one per line (ISO dates).
+// Each date is captured with the last FestivAR commit before it and saved in its sprint.
+//   - normally: just <date>;
+//   - when no earlier sprint is saved yet: the end of the previous sprint, then <date>, so the
+//     first page already has a comparison;
+//   - with <from> (a sprint number, the "backfill" input of the workflow): the end of every sprint
+//     from <from> to the one before <date>, then <date>. Sprint <from> becomes a reference
+//     (baseline) when nothing older is saved.
+// Usage: node scripts/sprint.mjs <date> <history-dir> [from]
+import { sprintOf, sprintStart } from './lib/sprints.mjs';
 import { openHistory } from './lib/history.mjs';
 
-const [date, historyDir] = process.argv.slice(2);
-if (!date || !historyDir) throw new Error('usage: sprint.mjs <date> <history-dir>');
+const [date, historyDir, from] = process.argv.slice(2);
+if (!date || !historyDir) throw new Error('usage: sprint.mjs <date> <history-dir> [from]');
 
-const sprint = sprintOf(new Date(date));
-const hasEarlier = openHistory(historyDir).some((e) => e.number < sprint.number);
-console.log(`SPRINT=${sprint.number}`);
-console.log(`NEED_BASELINE=${!hasEarlier}`);
-console.log(`BASELINE_DATE=${new Date(sprint.start.getTime() - 6e4).toISOString()}`);
+const current = sprintOf(new Date(date)).number;
+const lastMinuteOf = (n) => new Date(sprintStart(n + 1).getTime() - 6e4).toISOString();
+
+let first = current;
+if (from) first = Math.min(Number(from), current);
+else if (!openHistory(historyDir).some((e) => e.number < current)) first = current - 1;
+
+for (let n = first; n < current; n++) console.log(lastMinuteOf(n));
+console.log(new Date(date).toISOString());
