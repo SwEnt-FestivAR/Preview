@@ -53,3 +53,14 @@ class Shot(
 class WeeklyDemoCapture(private val s: Shot) {
   @get:Rule val rule = createComposeRule()
 
+  companion object {
+    @JvmStatic
+    @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
+    fun params(): List<Array<Any>> = SHOTS.map { arrayOf<Any>(it) }
+
+    private val SHOTS: List<Shot> =
+        listOf(
+            /*SHOTS*/
+        )
+  }
+
