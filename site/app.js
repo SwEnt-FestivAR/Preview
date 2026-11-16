@@ -218,3 +218,33 @@ const Demo = {
   },
 
   // Finger moves to the element most likely to lead to the next state, taps, then we switch.
+  async tap(a, b) {
+    const v = a.st.variants[this.vOf(a)];
+    const want = (overrides[a.sc.group]?.taps || {})[a.st.fn];
+    const target = pickTap(v.taps, want || b.st.label, !!want);
+    const note = $('#caption .tapnote');
+    if (!target) { if (note) note.textContent = ''; return; }
+    // Local (untransformed) coordinates: the device is tilted in 3D, client rects would be skewed.
+    const scrEl = $('#screen');
+    const shot = [...scrEl.querySelectorAll('img')].pop();
+    const r = contentRect(shot, v);
+    const scr = { left: scrEl.offsetLeft, top: scrEl.offsetTop }, dev = { left: 0, top: 0 };
+    const box = { x: scrEl.offsetLeft + r.left + target.x * r.width, y: scrEl.offsetTop + r.top + target.y * r.height, w: target.w * r.width, h: target.h * r.height };
+    const cx = box.x + box.w / 2, cy = box.y + box.h / 2;
+    if (note) note.textContent = target.label ? `Appui sur « ${target.label} »` : 'Appui';
+    const hand = $('#hand');
+    hand.classList.add('show');
+    await sleep(20);
+    hand.style.transform = `translate(${cx - 23}px, ${cy - 7}px)`;
+    const hl = h(`<div class="target" style="left:${box.x - scr.left + dev.left - 4}px;top:${box.y - scr.top + dev.top - 4}px;width:${box.w + 8}px;height:${box.h + 8}px"></div>`);
+    $('#screen').append(hl);
+    await sleep(900);
+    hand.classList.add('press');
+    const rp = h(`<div class="ripple" style="left:${cx}px;top:${cy}px"></div>`);
+    $('#device').append(rp);
+    await sleep(380);
+    hand.classList.remove('press');
+    setTimeout(() => { rp.remove(); hl.remove(); }, 700);
+    await sleep(120);
+  },
+
