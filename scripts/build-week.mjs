@@ -72,3 +72,10 @@ for (const p of previews) {
 for (const vs of Object.values(shotOf))
   for (const v of Object.keys(vs)) if (v !== 'light' && vs.light && vs[v].img === vs.light.img) delete vs[v];
 
+// ---- 2. compare with the previous week -----------------------------------------------------------
+const indexFile = path.join(history, 'index.json');
+const index = fs.existsSync(indexFile) ? JSON.parse(fs.readFileSync(indexFile, 'utf8')) : [];
+const prevEntry = index.filter((w) => w.id < weekId).sort((a, b) => b.id.localeCompare(a.id))[0];
+const prev = prevEntry ? JSON.parse(fs.readFileSync(path.join(history, 'weeks', prevEntry.id + '.json'), 'utf8')) : null;
+const prevStates = {};
+for (const s of prev?.screens || []) for (const st of s.states) prevStates[st.id] = st;
