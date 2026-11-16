@@ -134,3 +134,10 @@ class WeeklyDemoCapture(private val s: Shot) {
                 "{\"x\":${b.left / rw},\"y\":${b.top / rh},\"w\":${b.width / rw}," +
                     "\"h\":${b.height / rh},\"label\":${json(label)}}"
               }
+      File(out, "$base.json")
+          .writeText(
+              "{\"ok\":true,\"w\":${bmp.width},\"h\":${bmp.height},\"taps\":[${taps.joinToString(",")}]}")
+    } catch (t: Throwable) {
+      File(out, "$base.json").writeText("{\"ok\":false,\"error\":${json(t.toString().take(400))}}")
+    }
+  }
