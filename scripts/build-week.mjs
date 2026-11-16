@@ -22,3 +22,12 @@ const start = new Date(end.getTime() - 7 * 864e5);
 const weekId = isoWeek(end);
 
 for (const d of ['shots', 'weeks']) fs.mkdirSync(path.join(history, d), { recursive: true });
+
+function isoWeek(date) {
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const y = d.getUTCFullYear();
+  const w = Math.ceil(((d - Date.UTC(y, 0, 1)) / 864e5 + 1) / 7);
+  return `${y}-W${String(w).padStart(2, '0')}`;
+}
