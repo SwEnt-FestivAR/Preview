@@ -115,3 +115,4 @@ const screens = Object.entries(groups).map(([group, ps]) => {
   const status = prev && !hadGroup ? 'new' : states.some((s) => s.status !== 'same') ? 'changed' : 'same';
   return { group, file: ps[0].file, kind: ps[0].kind, status, prs: [], states };
 });
+const removed = (prev?.screens || []).filter((s) => !groups[s.group]).map((s) => s.group);
