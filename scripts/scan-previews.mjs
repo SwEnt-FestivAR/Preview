@@ -46,3 +46,10 @@ for (const file of walk(srcRoot)) {
     });
   }
 }
+// Keep source order: it is the natural order of a screen's states (Open, Taken, Done...).
+previews.sort((a, b) => a.file.localeCompare(b.file));
+
+export const variantsFor = (p) => (p.kind === 'screen' ? ['light', 'dark', 'font', 'tablet'] : ['light', 'dark', 'font']);
+for (const p of previews) p.variants = variantsFor(p);
+
+fs.writeFileSync(outFile, JSON.stringify(previews, null, 2));
