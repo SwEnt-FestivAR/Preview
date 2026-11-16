@@ -8,14 +8,18 @@ FA="$1"; REF="$2"; DATE="$3"; HIST="$4"
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 
 git -C "$FA" checkout -q --force "$REF"
-git -C "$FA" clean -fdq app/src/test/java/weeklydemo || true
+git -C "$FA" clean -fdq app/src/test || true
 COMMIT="$(git -C "$FA" rev-parse HEAD)"
 echo "::group::Capture $REF ($COMMIT) as week of $DATE"
+# FestivAR's own unit tests are neither run nor needed: remove them from the clone so Gradle only
+# compiles our capture test (Robolectric can only render Compose inside a test).
+rm -rf "$FA/app/src/test/java" "$FA/app/src/test/kotlin"
 node "$HERE/scripts/scan-previews.mjs" "$FA" "$HERE/previews.json"
 rm -rf "$FA/app/build/weekly-demo"
 # A preview that cannot render only fails its own capture; the others still run.
 (cd "$FA" && ./gradlew :app:testDebugUnitTest --tests 'weeklydemo.*' --continue --no-daemon -q) || echo "Some captures failed (listed on the site)."
 node "$HERE/scripts/build-week.mjs" --captures "$FA/app/build/weekly-demo" --previews "$HERE/previews.json" \
   --history "$HIST" --date "$DATE" --commit "$COMMIT"
-git -C "$FA" clean -fdq app/src/test/java/weeklydemo
+git -C "$FA" checkout -q --force "$REF" -- app/src/test 2>/dev/null || true
+git -C "$FA" clean -fdq app/src/test
 echo "::endgroup::"
