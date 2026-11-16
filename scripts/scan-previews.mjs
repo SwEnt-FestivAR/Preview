@@ -18,3 +18,6 @@ function* walk(dir) {
   }
 }
 
+const PREVIEW = /@Preview(?:\s*\(([^)]*)\))?\s*(?:@[\w.]+(?:\s*\([^)]*\))?\s*)*(?:(?:private|internal|public)\s+)?fun\s+(\w+)\s*\(\s*\)/g;
+const num = (args, key) => Number((args.match(new RegExp(`${key}\\s*=\\s*(\\d+)`)) || [])[1] || 0);
+
