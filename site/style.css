@@ -80,3 +80,13 @@ section > p.sub { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
 .shot .lbl.b { left: 8px; } .shot .lbl.a { right: 8px; }
 .slider { width: 100%; accent-color: #e24b4a; }
 
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 12px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: transparent; }
+.chip.on { background: var(--accent-bg); color: var(--accent); border-color: transparent; font-weight: 500; }
+.chip i { font-style: normal; width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-left: 5px; vertical-align: 1px; }
+.chip i.new { background: var(--new); } .chip i.changed { background: var(--chg); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 4px 10px; font-size: 12px; background: transparent; }
+.seg button.on { background: var(--accent); color: #fff; }
+.prs-inline { font-size: 12px; color: var(--muted); }
+
