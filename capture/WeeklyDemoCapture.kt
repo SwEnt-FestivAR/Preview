@@ -89,3 +89,17 @@ class WeeklyDemoCapture(private val s: Shot) {
               }
             }
         val density = LocalDensity.current.density
+        CompositionLocalProvider(
+            LocalConfiguration provides cfg,
+            LocalDensity provides Density(density, cfg.fontScale),
+        ) {
+          var mod =
+              when {
+                tablet -> Modifier.size(1000.dp, 720.dp)
+                s.h > 0 -> Modifier.size(s.w.dp, s.h.dp)
+                else -> Modifier.width(s.w.dp)
+              }
+          if (s.bg) mod = mod.background(if (night) Color(0xFF121212) else Color.White)
+          Box(mod) { method.invoke(currentComposer, null) }
+        }
+      }
