@@ -150,3 +150,15 @@ try {
 } catch (e) {
   console.warn('PRs skipped:', String(e));
 }
+
+// ---- 4. write ------------------------------------------------------------------------------------
+const order = { new: 0, changed: 1, same: 2 };
+screens.sort((a, b) => order[a.status] - order[b.status] || (a.kind > b.kind ? -1 : 1) || a.group.localeCompare(b.group));
+const stats = {
+  newScreens: screens.filter((s) => s.status === 'new').length,
+  changedScreens: screens.filter((s) => s.status === 'changed').length,
+  screens: screens.length,
+  prs: prs.length,
+  contributors: new Set(prs.map((p) => p.author)).size,
+  failed: failed.length,
+};
