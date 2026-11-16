@@ -4,7 +4,7 @@
 // Env: GITHUB_TOKEN (optional) for the merged PRs of the week.
 import fs from 'node:fs';
 import { parseArgs } from 'node:util';
-import { REPO } from './lib/config.mjs';
+import { MIN_SUCCESS_RATIO, REPO } from './lib/config.mjs';
 import { isoWeek } from './lib/names.mjs';
 import { storeShots } from './lib/shots.mjs';
 import { buildScreens, removedScreens, sortScreens } from './lib/compare.mjs';
@@ -32,6 +32,12 @@ const previews = JSON.parse(fs.readFileSync(args.previews, 'utf8'));
 const index = openHistory(args.history);
 const previous = previousWeek(args.history, index, weekId);
 const { shots, failed } = storeShots(args.captures, previews, args.history);
+const planned = previews.reduce((n, p) => n + p.variants.length, 0);
+if (planned === 0 || (planned - failed.length) / planned < MIN_SUCCESS_RATIO) {
+  console.error(`Only ${planned - failed.length}/${planned} captures succeeded. First errors:`);
+  for (const f of failed.slice(0, 5)) console.error(`  ${f.id} @${f.variant}: ${f.error}`);
+  throw new Error('Capture run looks broken: week not saved.');
+}
 const screens = sortScreens(buildScreens(previews, shots, previous, args.history));
 const prs = await fetchMergedPRs(start, end, screens);
 

@@ -22,5 +22,11 @@ export const VARIANTS = {
 /** A capture counts as changed when more than this share of its pixels differ (0.1 %). */
 export const CHANGE_THRESHOLD = 0.001;
 
+/**
+ * Below this share of successful captures the run is treated as broken (FestivAR not compiling,
+ * say): no week is saved, so the history never shows every screen as removed.
+ */
+export const MIN_SUCCESS_RATIO = 0.5;
+
 /** Maximum number of merged PRs listed for one week. */
 export const MAX_PRS = 80;
