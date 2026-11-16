@@ -108,8 +108,12 @@ from `FIRST_SPRINT`, about 4-5 minutes of capture per sprint).
 Every run is a full run (capture, compare, save, deploy); a run in a sprint that already has a
 build replaces that sprint. The Friday 07:30 run captures the sprint just before it ends at noon.
 
-A run whose captures mostly fail (FestivAR not compiling, say) fails on purpose before saving
-anything (`MIN_SUCCESS_RATIO` in `scripts/lib/config.mjs`): the previous site stays online.
+A capture whose tests all fail without writing anything (typically Robolectric failing to
+download its Android jar, cached between runs under `~/.m2/repository/org/robolectric`) is retried
+once, and the first test failure is printed in the log. A capture that still mostly fails
+(`MIN_SUCCESS_RATIO` in `scripts/lib/config.mjs`) saves nothing: for an older sprint (baseline or
+backfill) the run skips it with a warning and goes on; for the current sprint the run fails and the
+previous site stays online.
 
 GitHub cron is UTC only: two crons are listed and the `when` job keeps the one matching the
 current Swiss offset. Keep both when editing the schedule.
