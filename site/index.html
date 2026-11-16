@@ -5,6 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FestivAR Weekly demo</title>
+  <link rel="icon" type="image/svg+xml" href="logo.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/base.css" />
@@ -13,9 +14,10 @@
 </head>
 <body>
   <header class="top">
-    <div class="brand"><span class="dot"></span> FestivAR <span class="muted">· Weekly demo</span></div>
+    <div class="brand"><img src="logo.svg" alt="" /> FestivAR <span class="muted">· Weekly demo</span></div>
     <div class="top-actions">
-      <select id="week" aria-label="Week"></select>
+      <select id="sprint" aria-label="Sprint"></select>
+      <button id="theme" aria-label="Toggle dark mode"></button>
       <button id="play" class="primary">▶ <span class="long">Play the </span>demo</button>
     </div>
   </header>

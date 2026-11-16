@@ -1,10 +1,10 @@
 // Small DOM and formatting helpers shared by the page modules.
 
-/** Folder holding index.json, weeks/ and shots/ (the `data` branch, copied at deploy time). */
+/** Folder holding index.json, sprints/ and shots/ (the `data` branch, copied at deploy time). */
 export const DATA = 'data/';
 
 /** Variant ids written by the capture test, with their labels. Keep in sync with scripts/lib/config.mjs. */
-export const VARIANTS = { light: 'Light', dark: 'Dark', font: 'Font ×1.5', tablet: 'Tablet' };
+export const VARIANTS = { light: 'Light', dark: 'Dark', font: 'Font ×1.5' };
 
 /** Status ids written by scripts/lib/compare.mjs, with their labels. */
 export const STATUS = { new: 'New', changed: 'Changed', same: 'Unchanged' };
@@ -26,11 +26,9 @@ export const esc = (s) =>
 /** URL of a stored capture. */
 export const shotUrl = (hash) => `${DATA}shots/${hash}.png`;
 
-/** "2026-W47" -> 47 */
-export const weekNumber = (id) => Number(id.split('-W')[1]);
-
-/** "2026-11-16T..." -> "16 Nov" */
-export const shortDate = (iso) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+/** "2026-11-13T11:00:00Z" -> "Fri 13 Nov, 12:00" (Swiss time, like the sprint boundaries). */
+export const shortDate = (iso) =>
+  new Date(iso).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich' });
 
 /** Link to a FestivAR pull request. */
 export const prLink = (repo, n) => `<a href="https://github.com/${repo}/pull/${n}" target="_blank" rel="noopener">#${n}</a>`;

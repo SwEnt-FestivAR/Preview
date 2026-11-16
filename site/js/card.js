@@ -48,7 +48,7 @@ function fill(el, items, toButton, redraw) {
   }
 }
 
-/** Screenshot of the state, or a before/after slider when it changed since last week. */
+/** Screenshot of the state, or a before/after slider when it changed since the previous sprint. */
 function drawViewer(el, screen, state, variant) {
   const current = state.variants[variant];
   const before = state.before?.[variant];

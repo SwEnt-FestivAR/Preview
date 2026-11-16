@@ -1,38 +1,39 @@
-// The scrolling page: week header, stats, new and changed screens, PRs, other screens.
-import { $, h, esc, shotUrl, weekNumber, shortDate, STATUS } from './util.js';
+// The scrolling page: sprint header, stats, new and changed screens, PRs, other screens.
+import { $, h, esc, shotUrl, shortDate, STATUS } from './util.js';
 import { screenCard } from './card.js';
 
 /**
- * Renders a week into `main`. `openDemo(screens?)` starts the demo mode, on the given screens
- * or on the whole week.
+ * Renders a sprint into `main`. `openDemo(screens?)` starts the demo mode, on the given screens
+ * or on the whole sprint.
  */
-export function renderOverview(main, week, openDemo) {
-  const byStatus = (status, kind) => week.screens.filter((s) => s.status === status && (!kind || s.kind === kind));
+export function renderOverview(main, sprint, openDemo) {
+  const byStatus = (status, kind) => sprint.screens.filter((s) => s.status === status && (!kind || s.kind === kind));
   main.innerHTML = '';
-  main.append(header(week), stats(week.stats));
-  main.append(section('New screens', 'Added this week, with all their states and variants.', byStatus('new', 'screen'), week, openDemo));
-  main.append(section('Changed screens', 'Drag the slider to compare with last week.', byStatus('changed', 'screen'), week, openDemo));
+  main.append(header(sprint), stats(sprint.stats));
+  main.append(section('New screens', 'Added this sprint, with all their states and variants.', byStatus('new', 'screen'), sprint, openDemo));
+  main.append(section('Changed screens', 'Drag the slider to compare with the previous sprint.', byStatus('changed', 'screen'), sprint, openDemo));
   const components = [...byStatus('new', 'component'), ...byStatus('changed', 'component')];
-  if (components.length) main.append(section('Components', 'Small UI pieces that are new or changed.', components, week, openDemo));
-  main.append(pullRequests(week));
+  if (components.length) main.append(section('Components', 'Small UI pieces that are new or changed.', components, sprint, openDemo));
+  main.append(pullRequests(sprint));
   const same = byStatus('same');
   if (same.length) main.append(otherScreens(same, openDemo));
-  if (week.removed.length) {
-    main.append(h(`<section><h2>Removed</h2><p class="sub">${week.removed.map(esc).join(', ')}</p></section>`));
+  if (sprint.removed.length) {
+    main.append(h(`<section><h2>Removed</h2><p class="sub">${sprint.removed.map(esc).join(', ')}</p></section>`));
   }
-  if (week.failed.length) main.append(failures(week.failed));
+  if (sprint.failed.length) main.append(failures(sprint.failed));
 }
 
-function header(week) {
-  const commit = week.commit
-    ? ` · <a href="https://github.com/${week.repo}/commit/${week.commit}">${week.commit.slice(0, 7)}</a>`
+function header(sprint) {
+  const commit = sprint.commit
+    ? ` · <a href="https://github.com/${sprint.repo}/commit/${sprint.commit}">${sprint.commit.slice(0, 7)}</a>`
     : '';
-  const compared = week.previous ? ` · compared with ${esc(week.previous)}` : ' · baseline week';
-  const lastWeek = week.previous
-    ? `<a class="prev-week" href="#${esc(week.previous)}/demo">▶ Week ${weekNumber(week.previous)} demo</a>`
+  const previousNumber = sprint.previous?.split('-')[1];
+  const compared = sprint.previous ? ` · compared with Sprint ${esc(previousNumber)}` : ' · baseline sprint';
+  const previousDemo = sprint.previous
+    ? `<a class="prev-sprint" href="#${esc(sprint.previous)}/demo">▶ Sprint ${esc(previousNumber)} demo</a>`
     : '';
-  return h(`<div class="hero"><div class="hero-row"><h1>Week ${weekNumber(week.id)}</h1>${lastWeek}</div>
-    <p>${shortDate(week.start)} → ${shortDate(week.end)}${commit}${compared}</p></div>`);
+  return h(`<div class="hero"><div class="hero-row"><h1>Sprint ${sprint.number}</h1>${previousDemo}</div>
+    <p>${shortDate(sprint.start)} → ${shortDate(sprint.end)}${commit}${compared}</p></div>`);
 }
 
 function stats(s) {
@@ -41,26 +42,26 @@ function stats(s) {
     ${tile(s.prs, 'merged PRs')}${tile(s.contributors, 'contributors')}${tile(s.screens, 'screens captured')}</div>`);
 }
 
-function section(title, subtitle, screens, week, openDemo) {
+function section(title, subtitle, screens, sprint, openDemo) {
   const sec = h(`<section><h2>${title}</h2><p class="sub">${subtitle}</p></section>`);
   if (!screens.length) {
-    sec.append(h('<p class="empty">Nothing this week.</p>'));
+    sec.append(h('<p class="empty">Nothing this sprint.</p>'));
     return sec;
   }
   const grid = h('<div class="grid"></div>');
-  for (const screen of screens) grid.append(screenCard(screen, week.repo, () => openDemo([screen])));
+  for (const screen of screens) grid.append(screenCard(screen, sprint.repo, () => openDemo([screen])));
   sec.append(grid);
   return sec;
 }
 
-function pullRequests(week) {
-  const sec = h(`<section><h2>Merged this week</h2>
-    <p class="sub">${week.prs.length} PRs. Those touching a screen are tagged.</p></section>`);
-  if (!week.prs.length) {
+function pullRequests(sprint) {
+  const sec = h(`<section><h2>Merged this sprint</h2>
+    <p class="sub">${sprint.prs.length} PRs. Those touching a screen are tagged.</p></section>`);
+  if (!sprint.prs.length) {
     sec.append(h('<p class="empty">No PR merged in this period.</p>'));
     return sec;
   }
-  const rows = week.prs.map((p) => {
+  const rows = sprint.prs.map((p) => {
     const tag = p.groups.length ? `<span class="badge changed">${p.groups.length} screen${p.groups.length > 1 ? 's' : ''}</span>` : '';
     return `<div class="pr"><span class="num">#${p.number}</span>
       <a class="title" href="${esc(p.url)}">${esc(p.title)}</a>${tag}<span class="who">${esc(p.author)}</span></div>`;
