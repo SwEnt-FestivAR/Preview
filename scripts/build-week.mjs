@@ -125,3 +125,28 @@ async function gh(url) {
   if (!r.ok) throw new Error(`${url}: ${r.status}`);
   return r.json();
 }
+let prs = [];
+try {
+  const day = (d) => d.toISOString().slice(0, 10);
+  const q = encodeURIComponent(`repo:${REPO} is:pr is:merged merged:${day(start)}..${day(end)}`);
+  const found = await gh(`/search/issues?q=${q}&per_page=100&sort=updated`);
+  const byFile = Object.fromEntries(screens.map((s) => [s.file, s]));
+  for (const it of found.items.slice(0, 80)) {
+    const pr = { number: it.number, title: it.title, author: it.user.login, url: it.html_url, mergedAt: it.pull_request?.merged_at, groups: [] };
+    try {
+      const files = await gh(`/repos/${REPO}/pulls/${it.number}/files?per_page=100`);
+      for (const f of files) {
+        const s = byFile[f.filename];
+        if (s && !pr.groups.includes(s.group)) {
+          pr.groups.push(s.group);
+          s.prs.push(it.number);
+        }
+      }
+    } catch (e) {
+      console.warn(String(e));
+    }
+    prs.push(pr);
+  }
+} catch (e) {
+  console.warn('PRs skipped:', String(e));
+}
