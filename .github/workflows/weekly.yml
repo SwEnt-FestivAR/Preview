@@ -24,3 +24,26 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install --no-audit --no-fund
+
+      - name: Open the history (data branch, created on the first run)
+        run: |
+          if git ls-remote --exit-code --heads origin data > /dev/null; then
+            git fetch --depth=1 origin data
+            git worktree add history FETCH_HEAD
+          else
+            git worktree add --detach history
+            git -C history checkout --orphan data
+            git -C history rm -rf --quiet .
+          fi
+
