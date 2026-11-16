@@ -1,182 +1,59 @@
-// Turns one capture run into a week of the demo site, kept in the history folder (the `data` branch):
-//   shots/<sha1>.png   every distinct image ever captured (unchanged images are stored once)
-//   weeks/<id>.json    what the site shows for that week
-//   index.json         list of the weeks
+// Turns one capture run into one week of the demo site, saved in the history folder.
 // Usage: node scripts/build-week.mjs --captures <dir> --previews <previews.json> --history <dir>
-//          [--date <ISO date, default now>] [--commit <sha>]
-// Env: GITHUB_TOKEN (optional, for the merged PRs of the week)
+//          [--date <ISO date, default now>] [--commit <FestivAR sha>]
+// Env: GITHUB_TOKEN (optional) for the merged PRs of the week.
 import fs from 'node:fs';
-import path from 'node:path';
-import crypto from 'node:crypto';
-import { PNG } from 'pngjs';
+import { parseArgs } from 'node:util';
+import { REPO } from './lib/config.mjs';
+import { isoWeek } from './lib/names.mjs';
+import { storeShots } from './lib/shots.mjs';
+import { buildScreens, removedScreens, sortScreens } from './lib/compare.mjs';
+import { fetchMergedPRs } from './lib/github.mjs';
+import { openHistory, previousWeek, saveWeek } from './lib/history.mjs';
 
-const REPO = 'SwEnt-FestivAR/FestivAR';
-const args = Object.fromEntries(
-  process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1]]] : acc), []),
-);
-const captures = args.captures;
-const history = args.history;
-const previews = JSON.parse(fs.readFileSync(args.previews, 'utf8'));
+const { values: args } = parseArgs({
+  options: {
+    captures: { type: 'string' },
+    previews: { type: 'string' },
+    history: { type: 'string' },
+    date: { type: 'string' },
+    commit: { type: 'string' },
+  },
+});
+for (const required of ['captures', 'previews', 'history']) {
+  if (!args[required]) throw new Error(`missing --${required}`);
+}
+
 const end = args.date ? new Date(args.date) : new Date();
 const start = new Date(end.getTime() - 7 * 864e5);
 const weekId = isoWeek(end);
+const previews = JSON.parse(fs.readFileSync(args.previews, 'utf8'));
 
-for (const d of ['shots', 'weeks']) fs.mkdirSync(path.join(history, d), { recursive: true });
+const index = openHistory(args.history);
+const previous = previousWeek(args.history, index, weekId);
+const { shots, failed } = storeShots(args.captures, previews, args.history);
+const screens = sortScreens(buildScreens(previews, shots, previous, args.history));
+const prs = await fetchMergedPRs(start, end, screens);
 
-function isoWeek(date) {
-  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  const day = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - day);
-  const y = d.getUTCFullYear();
-  const w = Math.ceil(((d - Date.UTC(y, 0, 1)) / 864e5 + 1) / 7);
-  return `${y}-W${String(w).padStart(2, '0')}`;
-}
-
-const words = (s) => s.match(/[A-Z]+(?![a-z])|[A-Z]?[a-z]+|\d+/g) || [s];
-function stateLabels(fns) {
-  const split = fns.map((f) => words(f.replace(/Preview\d*$/, '')));
-  let common = 0;
-  if (split.length > 1)
-    while (split.every((w) => w[common] && w[common] === split[0][common] && w.length > common + 1)) common++;
-  return split.map((w) => {
-    const rest = w.slice(common).join(' ');
-    return split.length === 1 || !rest ? 'Par défaut' : rest;
-  });
-}
-
-// ---- 1. store this run's images ------------------------------------------------------------------
-const failed = [];
-const shotOf = {};
-for (const p of previews) {
-  for (const v of p.variants) {
-    const base = path.join(captures, `${p.id}__${v}`);
-    let meta;
-    try {
-      meta = JSON.parse(fs.readFileSync(base + '.json', 'utf8'));
-    } catch {
-      meta = { ok: false, error: 'not captured (test did not run)' };
-    }
-    if (!meta.ok || !fs.existsSync(base + '.png')) {
-      failed.push({ id: p.id, variant: v, error: meta.error });
-      continue;
-    }
-    const buf = fs.readFileSync(base + '.png');
-    const sha = crypto.createHash('sha1').update(buf).digest('hex').slice(0, 16);
-    const dest = path.join(history, 'shots', sha + '.png');
-    if (!fs.existsSync(dest)) fs.writeFileSync(dest, buf);
-    (shotOf[p.id] ||= {})[v] = { img: sha, w: meta.w, h: meta.h, taps: meta.taps.filter((t) => t.w > 0 && t.h > 0) };
-  }
-}
-
-// A variant that renders exactly like the light one (e.g. a preview forcing its theme) adds nothing.
-for (const vs of Object.values(shotOf))
-  for (const v of Object.keys(vs)) if (v !== 'light' && vs.light && vs[v].img === vs.light.img) delete vs[v];
-
-// ---- 2. compare with the previous week -----------------------------------------------------------
-const indexFile = path.join(history, 'index.json');
-const index = fs.existsSync(indexFile) ? JSON.parse(fs.readFileSync(indexFile, 'utf8')) : [];
-const prevEntry = index.filter((w) => w.id < weekId).sort((a, b) => b.id.localeCompare(a.id))[0];
-const prev = prevEntry ? JSON.parse(fs.readFileSync(path.join(history, 'weeks', prevEntry.id + '.json'), 'utf8')) : null;
-const prevStates = {};
-for (const s of prev?.screens || []) for (const st of s.states) prevStates[st.id] = st;
-
-function diffRatio(a, b) {
-  if (a === b) return 0;
-  const A = PNG.sync.read(fs.readFileSync(path.join(history, 'shots', a + '.png')));
-  const B = PNG.sync.read(fs.readFileSync(path.join(history, 'shots', b + '.png')));
-  if (A.width !== B.width || A.height !== B.height) return 1;
-  let n = 0;
-  for (let i = 0; i < A.data.length; i += 4)
-    if (Math.abs(A.data[i] - B.data[i]) + Math.abs(A.data[i + 1] - B.data[i + 1]) + Math.abs(A.data[i + 2] - B.data[i + 2]) > 24) n++;
-  return n / (A.width * A.height);
-}
-
-const groups = {};
-for (const p of previews) if (shotOf[p.id]?.light) (groups[p.group] ||= []).push(p);
-
-const screens = Object.entries(groups).map(([group, ps]) => {
-  const labels = stateLabels(ps.map((p) => p.fn));
-  const states = ps.map((p, i) => {
-    const before = prevStates[p.id];
-    const st = { id: p.id, fn: p.fn, label: labels[i], variants: shotOf[p.id], status: 'same', diff: 0 };
-    if (!prev) st.status = 'same';
-    else if (!before) st.status = 'new';
-    else {
-      const d = diffRatio(before.variants.light.img, st.variants.light.img);
-      if (d > 0.001) {
-        st.status = 'changed';
-        st.diff = Math.round(d * 1000) / 10;
-        st.before = Object.fromEntries(Object.entries(before.variants).map(([v, x]) => [v, x.img]));
-      }
-    }
-    return st;
-  });
-  const hadGroup = prev?.screens.some((s) => s.group === group);
-  const status = prev && !hadGroup ? 'new' : states.some((s) => s.status !== 'same') ? 'changed' : 'same';
-  return { group, file: ps[0].file, kind: ps[0].kind, status, prs: [], states };
-});
-const removed = (prev?.screens || []).filter((s) => !groups[s.group]).map((s) => s.group);
-
-// ---- 3. merged PRs of the week -------------------------------------------------------------------
-async function gh(url) {
-  const headers = { Accept: 'application/vnd.github+json', 'User-Agent': 'weekly-demo' };
-  if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
-  const r = await fetch('https://api.github.com' + url, { headers });
-  if (!r.ok) throw new Error(`${url}: ${r.status}`);
-  return r.json();
-}
-let prs = [];
-try {
-  const day = (d) => d.toISOString().slice(0, 10);
-  const q = encodeURIComponent(`repo:${REPO} is:pr is:merged merged:${day(start)}..${day(end)}`);
-  const found = await gh(`/search/issues?q=${q}&per_page=100&sort=updated`);
-  const byFile = Object.fromEntries(screens.map((s) => [s.file, s]));
-  for (const it of found.items.slice(0, 80)) {
-    const pr = { number: it.number, title: it.title, author: it.user.login, url: it.html_url, mergedAt: it.pull_request?.merged_at, groups: [] };
-    try {
-      const files = await gh(`/repos/${REPO}/pulls/${it.number}/files?per_page=100`);
-      for (const f of files) {
-        const s = byFile[f.filename];
-        if (s && !pr.groups.includes(s.group)) {
-          pr.groups.push(s.group);
-          s.prs.push(it.number);
-        }
-      }
-    } catch (e) {
-      console.warn(String(e));
-    }
-    prs.push(pr);
-  }
-} catch (e) {
-  console.warn('PRs skipped:', String(e));
-}
-
-// ---- 4. write ------------------------------------------------------------------------------------
-const order = { new: 0, changed: 1, same: 2 };
-screens.sort((a, b) => order[a.status] - order[b.status] || (a.kind > b.kind ? -1 : 1) || a.group.localeCompare(b.group));
-const stats = {
-  newScreens: screens.filter((s) => s.status === 'new').length,
-  changedScreens: screens.filter((s) => s.status === 'changed').length,
-  screens: screens.length,
-  prs: prs.length,
-  contributors: new Set(prs.map((p) => p.author)).size,
-  failed: failed.length,
-};
 const week = {
   id: weekId,
   start: start.toISOString(),
   end: end.toISOString(),
   commit: args.commit || null,
   repo: REPO,
-  previous: prev?.id || null,
-  stats,
+  previous: previous?.id || null,
+  stats: {
+    newScreens: screens.filter((s) => s.status === 'new').length,
+    changedScreens: screens.filter((s) => s.status === 'changed').length,
+    screens: screens.length,
+    prs: prs.length,
+    contributors: new Set(prs.map((p) => p.author)).size,
+    failed: failed.length,
+  },
   screens,
-  removed,
+  removed: removedScreens(previous, screens),
   prs,
   failed,
 };
-fs.writeFileSync(path.join(history, 'weeks', weekId + '.json'), JSON.stringify(week));
-const entry = { id: weekId, start: week.start, end: week.end, commit: week.commit, stats };
-const next = index.filter((w) => w.id !== weekId).concat(entry).sort((a, b) => b.id.localeCompare(a.id));
-fs.writeFileSync(indexFile, JSON.stringify(next, null, 2));
-console.log(weekId, JSON.stringify(stats));
+saveWeek(args.history, index, week);
+console.log(weekId, JSON.stringify(week.stats));
