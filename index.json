@@ -21,10 +21,25 @@
     "end": "2026-11-13T11:00:00.000Z",
     "commit": "6d3e4049dd148cb8c667a2a64dc4482efef74bb6",
     "stats": {
-      "newScreens": 0,
-      "changedScreens": 0,
+      "newScreens": 10,
+      "changedScreens": 11,
       "screens": 32,
       "prs": 76,
+      "contributors": 7,
+      "failed": 0
+    }
+  },
+  {
+    "id": "sprint-4",
+    "number": 4,
+    "start": "2026-10-30T11:00:00.000Z",
+    "end": "2026-11-06T11:00:00.000Z",
+    "commit": "7e9c1604cdda778e7967aef9454c2252619362b7",
+    "stats": {
+      "newScreens": 0,
+      "changedScreens": 0,
+      "screens": 22,
+      "prs": 27,
       "contributors": 7,
       "failed": 0
     }
