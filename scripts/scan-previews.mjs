@@ -5,7 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SOURCE_ROOT, TEST_DEST, VARIANTS } from './lib/config.mjs';
+import { PHONE, SOURCE_ROOT, TEST_DEST, VARIANTS } from './lib/config.mjs';
 
 const TEMPLATE = path.join(path.dirname(fileURLToPath(import.meta.url)), '../capture/WeeklyDemoCapture.kt');
 
@@ -32,7 +32,20 @@ function jvmClass(code, file) {
   return pkg ? `${pkg}.${name}` : name;
 }
 
-/** All previews of the checkout, in file order then source order (= natural state order). */
+/**
+ * A Kotlin file is a "screen" when it is not under a components/ folder and its name ends with
+ * Screen or one of its previews is phone-tall (heightDp >= 600). Otherwise its previews are small
+ * "components".
+ */
+const isScreen = (rel, group, found) =>
+  !/\/components?\//.test(rel) &&
+  (/Screen$/.test(group) || found.some(([, args = '']) => intArg(args, 'heightDp') >= 600));
+
+/**
+ * All previews of the checkout, in file order then source order (= natural state order). Screens
+ * are rendered at the PHONE size whatever their @Preview says; components keep their own width and
+ * wrap their height.
+ */
 function scanPreviews(festivarDir) {
   const previews = [];
   for (const file of kotlinFiles(path.join(festivarDir, SOURCE_ROOT))) {
@@ -40,8 +53,10 @@ function scanPreviews(festivarDir) {
     if (!code.includes('@Preview')) continue;
     const rel = path.relative(festivarDir, file).replaceAll('\\', '/');
     const group = path.basename(file, '.kt');
-    const kind = /\/components?\//.test(rel) ? 'component' : 'screen';
-    for (const [, args = '', fn] of code.matchAll(PREVIEW)) {
+    const found = [...code.matchAll(PREVIEW)];
+    const kind = isScreen(rel, group, found) ? 'screen' : 'component';
+    for (const [, args = '', fn] of found) {
+      const size = kind === 'screen' ? PHONE : { w: intArg(args, 'widthDp') || PHONE.w, h: 0 };
       previews.push({
         id: `${group}.${fn}`,
         group,
@@ -49,8 +64,7 @@ function scanPreviews(festivarDir) {
         kind,
         cls: jvmClass(code, file),
         fn,
-        w: intArg(args, 'widthDp') || 412,
-        h: intArg(args, 'heightDp'),
+        ...size,
         bg: /showBackground\s*=\s*true/.test(args),
         variants: VARIANTS[kind],
       });
