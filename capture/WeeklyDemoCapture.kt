@@ -64,3 +64,13 @@ class WeeklyDemoCapture(private val s: Shot) {
         )
   }
 
+  @Test
+  fun capture() {
+    val out = File("build/weekly-demo").apply { mkdirs() }
+    val base = "${s.id}__${s.variant}"
+    try {
+      val method = Class.forName(s.cls).getDeclaredComposableMethod(s.fn)
+      method.asMethod().isAccessible = true
+      val night = s.variant == "dark"
+      val tablet = s.variant == "tablet"
+      rule.mainClock.autoAdvance = false
