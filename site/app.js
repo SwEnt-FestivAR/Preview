@@ -97,3 +97,14 @@ function render() {
   }
 }
 
+function section(main, title, sub, list) {
+  const sec = h(`<section><h2>${title}</h2><p class="sub">${sub}</p></section>`);
+  if (!list.length) sec.append(h('<p class="empty">Rien cette semaine.</p>'));
+  else {
+    const grid = h('<div class="grid"></div>');
+    list.forEach((sc) => grid.append(card(sc)));
+    sec.append(grid);
+  }
+  main.append(sec);
+}
+
