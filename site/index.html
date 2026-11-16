@@ -1,24 +1,27 @@
 <!doctype html>
-<html lang="fr">
+<!-- Static page. Overview: js/overview.js + js/card.js. Demo mode (the #demo block below): js/demo.js + js/tap.js. -->
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FestivAR Weekly demo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/overview.css" />
+  <link rel="stylesheet" href="css/demo.css" />
 </head>
 <body>
   <header class="top">
     <div class="brand"><span class="dot"></span> FestivAR <span class="muted">· Weekly demo</span></div>
     <div class="top-actions">
-      <select id="week" aria-label="Semaine"></select>
-      <button id="play" class="primary">▶ <span class="long">Lancer la </span>démo</button>
+      <select id="week" aria-label="Week"></select>
+      <button id="play" class="primary">▶ <span class="long">Play the </span>demo</button>
     </div>
   </header>
 
   <main id="main">
-    <p class="loading">Chargement…</p>
+    <p class="loading">Loading…</p>
   </main>
 
   <div id="demo" class="demo" hidden>
@@ -26,12 +29,12 @@
       <div class="demo-progress"><div id="demo-bar"></div></div>
       <div class="demo-tools">
         <div class="seg" id="demo-variant"></div>
-        <button id="demo-auto" class="ghost" title="Lecture auto (espace)">⏵ Auto</button>
-        <button id="demo-close" class="ghost" title="Quitter (Échap)">✕</button>
+        <button id="demo-auto" class="ghost" title="Autoplay (space)">⏵ Auto</button>
+        <button id="demo-close" class="ghost" title="Close (Escape)">✕</button>
       </div>
     </div>
     <div class="demo-stage">
-      <button class="arrow left" id="prev" aria-label="Précédent">‹</button>
+      <button class="arrow left" id="prev" aria-label="Previous">‹</button>
       <div class="demo-caption" id="caption"></div>
       <div class="float">
         <div class="device" id="device">
@@ -42,10 +45,10 @@
         </div>
         <div class="shadow"></div>
       </div>
-      <button class="arrow right" id="next" aria-label="Suivant">›</button>
+      <button class="arrow right" id="next" aria-label="Next">›</button>
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
