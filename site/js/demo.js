@@ -71,25 +71,28 @@ export const Demo = {
     return step.state.variants[this.variant] ? this.variant : 'light';
   },
 
-  /** Moves by `d` steps. Going forward within one screen first plays the tap animation. */
+  /** Moves by `d` steps. Going forward first plays the tap leading there, when there is one. */
   async go(d) {
     const j = this.i + d;
     if (this.busy || j < 0 || j >= this.steps.length) return;
     this.busy = true;
     const from = this.steps[this.i];
     const to = this.steps[j];
-    if (d > 0 && from.screen === to.screen) await this.tap(from, to);
+    if (d > 0 && (from.screen === to.screen || from.state.link?.to === to.state.id)) await this.tap(from, to);
     this.i = j;
     this.show(false, d);
     this.busy = false;
   },
 
+  /** Hand tap on `from` that leads to `to`: its link to another screen, a demo.json tap or a match. */
   async tap(from, to) {
     const shot = from.state.variants[this.variantOf(from)];
     const wanted = this.overrides[from.screen.group]?.taps?.[from.state.fn];
-    const target = pickTap(shot.taps, wanted || to.state.label, Boolean(wanted));
+    const link = from.state.link?.to === to.state.id ? from.state.link.tap : null;
+    const target = pickTap(shot.taps, wanted || to.state.label, { link, exact: Boolean(wanted) });
     if (!target) return;
-    $('#caption .tapnote').textContent = target.label ? `Tap “${target.label}”` : 'Tap';
+    const label = target.label.length > 40 ? `${target.label.slice(0, 40)}…` : target.label;
+    $('#caption .tapnote').textContent = label ? `Tap “${label}”` : 'Tap';
     await animateTap(target, shot);
   },
 
@@ -134,7 +137,10 @@ export const Demo = {
     sleep(1900).then(() => line.remove());
   },
 
-  showCaption({ screen, state, k, n, wipe }) {
+  showCaption(step) {
+    const { screen, state, k, n, wipe } = step;
+    const previous = this.steps[this.i - 1];
+    const openedFrom = previous?.state.link?.to === state.id ? previous.screen.title : null;
     const position = `${this.i + 1}/${this.steps.length}`;
     const kicker = this.whole ? `Sprint ${this.sprint.number} · ${position}` : position;
     const status = state.status === 'same' ? screen.status : state.status;
@@ -144,9 +150,13 @@ export const Demo = {
       <h2>${esc(screen.title)}</h2>
       <div class="state">${esc(state.label)}${n > 1 ? ` <span class="dim">· state ${k + 1}/${n}</span>` : ''}</div>
       <span class="badge ${status}">${STATUS[status]}${wipe ? ` · ${state.diff}% of pixels` : ''}</span>
+      ${wipe ? '<div class="meta"><button class="ghost replay">↺ Replay before → after</button></div>' : ''}
+      ${openedFrom ? `<div class="meta">Opened from ${esc(openedFrom)}</div>` : ''}
       ${note ? `<div class="meta note">${esc(note)}</div>` : ''}
       ${screen.prs.length ? `<div class="meta">PRs ${screen.prs.map((p) => prLink(this.sprint.repo, p)).join(' ')}</div>` : ''}
       <div class="tapnote"></div>`;
+    const replay = $('#caption .replay');
+    if (replay) replay.onclick = () => this.showImage(step, this.variantOf(step), 0);
   },
 
   showControls(step, variant) {
