@@ -1,5 +1,5 @@
-# Every Friday: captures all FestivAR screens (read-only clone), compares them with last week,
-# saves the week on the `data` branch and publishes the demo site to GitHub Pages.
+# Every Friday: captures all FestivAR screens (read-only clone), compares them with the previous sprint,
+# saves the sprint on the `data` branch and publishes the demo site to GitHub Pages.
 # Requires Settings -> Pages -> Source = "GitHub Actions" on this repo.
 name: Weekly demo
 
@@ -12,14 +12,14 @@ on:
   workflow_dispatch: # by hand: Actions -> Weekly demo -> Run workflow
     inputs:
       date:
-        description: "Rebuild the week ending on this date (YYYY-MM-DD). Empty = now."
+        description: "Rebuild the sprint containing this date (YYYY-MM-DD). Empty = now."
         required: false
-  push: # a change to this repo rebuilds the current week in full (captures included)
+  push: # a change to this repo rebuilds the current sprint in full (captures included)
     branches: [main]
     paths: ["site/**", "scripts/**", "capture/**", "demo.json", ".github/workflows/**"]
 
 permissions:
-  contents: write # push the week to the `data` branch
+  contents: write # push the sprint to the `data` branch
   pages: write
   id-token: write
 
@@ -80,17 +80,17 @@ jobs:
       - name: Clone FestivAR (read-only)
         run: git clone https://github.com/SwEnt-FestivAR/FestivAR.git festivar
 
-      - name: Capture this week
+      - name: Capture the sprint
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           DATE="${{ github.event.inputs.date }}"
           DATE="${DATE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
-          # Very first run: also capture one week earlier, so there is something to compare with.
-          if [ ! -f history/index.json ]; then
-            PREV_DATE="$(date -u -d "$DATE - 7 days" +%Y-%m-%dT%H:%M:%SZ)"
-            PREV_REF="$(git -C festivar rev-list -1 --before="$PREV_DATE" origin/main)"
-            bash scripts/capture.sh festivar "$PREV_REF" "$PREV_DATE" history
+          eval "$(node scripts/sprint.mjs "$DATE" history)" # SPRINT, NEED_BASELINE, BASELINE_DATE
+          # No earlier sprint saved: first capture the end of the previous sprint, to compare with.
+          if [ "$NEED_BASELINE" = true ]; then
+            BASE_REF="$(git -C festivar rev-list -1 --before="$BASELINE_DATE" origin/main)"
+            bash scripts/capture.sh festivar "$BASE_REF" "$BASELINE_DATE" history
           fi
           REF="$(git -C festivar rev-list -1 --before="$DATE" origin/main)"
           bash scripts/capture.sh festivar "$REF" "$DATE" history
@@ -101,13 +101,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -q -m "Week $(jq -r '.[0].id' index.json)" || echo "Nothing new"
+          git commit -q -m "Sprint $(jq -r '.[0].number' index.json)" || echo "Nothing new"
           git push -q origin HEAD:data
 
       - name: Assemble the site
         run: |
           mkdir -p site/data
-          [ -f history/index.json ] && cp -r history/index.json history/weeks history/shots site/data/
+          [ -f history/index.json ] && cp -r history/index.json history/sprints history/shots site/data/
           cp demo.json site/data/demo.json
 
       - uses: actions/upload-pages-artifact@v3
