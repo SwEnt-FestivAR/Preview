@@ -1,42 +1,30 @@
 /* Theme tokens (light and dark), base elements and the sticky top bar. */
+/* Each token is light-dark(<light>, <dark>): the theme follows the system, or the toggle
+   (js/theme.js) forces it with data-theme on <html>. */
 :root {
-  --bg: #f6f5f2;
-  --card: #ffffff;
-  --text: #1d1c1a;
-  --muted: #6b6a65;
-  --line: rgba(0, 0, 0, 0.09);
-  --accent: #5b4fd6;
-  --accent-bg: #eeedfe;
-  --new: #0f7a55;
-  --new-bg: #e1f5ee;
-  --chg: #9a5b06;
-  --chg-bg: #faeeda;
-  --err: #a32d2d;
+  color-scheme: light dark;
+  --bg: light-dark(#f6f5f2, #141413);
+  --card: light-dark(#ffffff, #1f1f1d);
+  --text: light-dark(#1d1c1a, #f1efe8);
+  --muted: light-dark(#6b6a65, #a3a29b);
+  --line: light-dark(rgba(0, 0, 0, 0.09), rgba(255, 255, 255, 0.1));
+  --accent: light-dark(#5b4fd6, #a59cf2);
+  --on-accent: light-dark(#ffffff, #141413);
+  --accent-bg: light-dark(#eeedfe, #2c2860);
+  --new: light-dark(#0f7a55, #5dcaa5);
+  --new-bg: light-dark(#e1f5ee, #0d3a2c);
+  --chg: light-dark(#9a5b06, #f0b860);
+  --chg-bg: light-dark(#faeeda, #47300a);
+  --err: light-dark(#a32d2d, #f09595);
   --radius: 14px;
-  color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #141413;
-    --card: #1f1f1d;
-    --text: #f1efe8;
-    --muted: #a3a29b;
-    --line: rgba(255, 255, 255, 0.1);
-    --accent: #a59cf2;
-    --accent-bg: #2c2860;
-    --new: #5dcaa5;
-    --new-bg: #0d3a2c;
-    --chg: #f0b860;
-    --chg-bg: #47300a;
-    --err: #f09595;
-    color-scheme: dark;
-  }
-}
+:root[data-theme='light'] { color-scheme: light; }
+:root[data-theme='dark'] { color-scheme: dark; }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 Inter, system-ui, sans-serif; }
 button, select { font: inherit; color: inherit; }
 button { cursor: pointer; border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 7px 14px; }
-button.primary { background: var(--accent); color: #fff; border-color: transparent; font-weight: 500; }
+button.primary { background: var(--accent); color: var(--on-accent); border-color: transparent; font-weight: 500; }
 button.ghost { background: transparent; }
 select { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 7px 10px; }
 a { color: var(--accent); text-decoration: none; }
@@ -45,7 +33,8 @@ a:hover { text-decoration: underline; }
 
 .top { position: sticky; top: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px max(16px, calc((100vw - 1180px) / 2)); background: color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
 .brand { font-weight: 600; display: flex; align-items: center; gap: 8px; }
-.brand .dot { width: 12px; height: 12px; border-radius: 50%; background: conic-gradient(#d85a30, #5b4fd6, #1d9e75, #d85a30); }
+.brand img { width: 26px; height: 26px; display: block; }
+#theme { padding: 7px 10px; line-height: 1; }
 .top-actions { display: flex; gap: 8px; }
 main { max-width: 1180px; margin: 0 auto; padding: 28px 16px 80px; }
 .loading { color: var(--muted); }
