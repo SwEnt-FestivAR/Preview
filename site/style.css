@@ -145,3 +145,13 @@ details summary { cursor: pointer; font-weight: 500; }
 .ba-tag { position: absolute; top: 46px; z-index: 2; font-size: 12px; padding: 4px 8px; border-radius: 6px; background: rgba(0, 0, 0, 0.65); color: #fff; }
 .shadow { position: absolute; left: 10%; right: 10%; bottom: -46px; height: 26px; border-radius: 50%; background: rgba(0, 0, 0, 0.5); filter: blur(14px); animation: shadow 6s ease-in-out infinite; }
 @keyframes shadow { 0%, 100% { transform: scale(1); opacity: 0.6; } 50% { transform: scale(0.85); opacity: 0.4; } }
+.hand { position: absolute; left: 0; top: 0; width: 58px; height: 58px; z-index: 5; pointer-events: none; opacity: 0; transform: translate(260px, 760px); transition: transform 0.9s cubic-bezier(0.3, 0.7, 0.3, 1), opacity 0.3s; }
+.hand svg { width: 100%; height: 100%; fill: #fff; stroke: #1d1c1a; stroke-width: 1.3; stroke-linejoin: round; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45)); }
+.hand.show { opacity: 1; }
+.hand.press svg { animation: press 0.35s; }
+@keyframes press { 50% { transform: scale(0.82); } }
+.ripple { position: absolute; z-index: 4; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; border: 3px solid #7f77dd; pointer-events: none; animation: ripple 0.7s ease-out forwards; }
+@keyframes ripple { to { transform: scale(5); opacity: 0; } }
+.target { position: absolute; z-index: 3; border: 2px solid #fac775; border-radius: 10px; box-shadow: 0 0 0 4px rgba(250, 199, 117, 0.25); pointer-events: none; animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 9px rgba(250, 199, 117, 0.1); } }
+
