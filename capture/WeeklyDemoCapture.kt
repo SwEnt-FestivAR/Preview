@@ -103,3 +103,14 @@ class WeeklyDemoCapture(private val s: Shot) {
           Box(mod) { method.invoke(currentComposer, null) }
         }
       }
+      rule.mainClock.advanceTimeBy(1500)
+      rule.waitForIdle()
+
+      // Dialogs open their own window: capture the top-most one.
+      val root: SemanticsNodeInteraction =
+          try {
+            rule.onRoot().also { it.fetchSemanticsNode() }
+          } catch (e: AssertionError) {
+            val roots = rule.onAllNodes(isRoot())
+            roots[roots.fetchSemanticsNodes().size - 1]
+          }
