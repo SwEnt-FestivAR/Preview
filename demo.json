@@ -1,0 +1,9 @@
+{
+  "_doc": "Optional tweaks of the demo mode, per screen (file name without .kt). All keys are optional.",
+  "_example": {
+    "skip": false,
+    "order": ["TaskDetailsOpenPreview", "TaskDetailsTakenPreview", "TaskDetailsDonePreview"],
+    "taps": { "TaskDetailsOpenPreview": "Take task" },
+    "notes": { "TaskDetailsOpenPreview": "A volunteer opens a task and takes it." }
+  }
+}
