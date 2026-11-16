@@ -4,26 +4,30 @@ import { $, h, sleep } from './util.js';
 /** Offset of the fingertip inside the 58 px hand icon. */
 const FINGERTIP = { x: 23, y: 7 };
 
+const norm = (s) => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
 /**
- * Picks the clickable area (from the capture JSON) most likely to lead to the next state.
- * With `exact`, `hint` is a label set in demo.json and must be contained in the element label.
- * Otherwise the label sharing most words with `hint` (the next state's name) wins; failing that,
- * the lowest labelled button-sized element. Returns null when nothing fits.
+ * Picks the clickable area (from the capture JSON) that leads to the next state, or null: the hand
+ * only taps when the target is plausible, otherwise the demo simply slides to the next state.
+ *   - `link`: the tap computed by scripts/lib/links.mjs (opens another screen); found again by label
+ *     in the displayed variant, whose layout may differ (font ×1.5);
+ *   - `exact`: `hint` is a label set in demo.json and must be contained in the element label;
+ *   - otherwise an element whose label shares a word stem with `hint` (the next state's name),
+ *     e.g. "Take this task" -> "Taken".
  */
-export function pickTap(taps, hint, exact) {
+export function pickTap(taps, hint, { link, exact } = {}) {
+  if (link) return taps?.find((t) => t.label === link.label) || link;
   if (!taps?.length) return null;
-  const norm = (s) => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   if (exact) return taps.find((t) => norm(t.label).includes(norm(hint))) || null;
-  const hintWords = norm(hint).split(/\s+/).filter((w) => w.length > 2);
+  const stems = norm(hint).split(/\s+/).filter((w) => w.length > 3).map((w) => w.slice(0, 4));
   let best = null;
   let bestScore = 0;
   for (const t of taps) {
-    const score = hintWords.filter((w) => norm(t.label).includes(w)).length;
+    const labelWords = norm(t.label).split(/\s+/);
+    const score = stems.filter((s) => labelWords.some((w) => w.startsWith(s))).length;
     if (score > bestScore) [best, bestScore] = [t, score];
   }
-  if (best) return best;
-  const buttons = taps.filter((t) => t.label && t.w * t.h < 0.25 && t.w * t.h > 0.0005);
-  return buttons.sort((a, b) => b.y + b.h - (a.y + a.h))[0] || null;
+  return best;
 }
 
 /**
