@@ -2,7 +2,8 @@
 // Renders every @Preview of the app with Robolectric (no emulator) in a few variants and writes, for
 // each one, a PNG plus a JSON with the clickable areas (used by the "hand" of the demo mode).
 // Variant ids ("light", "dark", "font") must match scripts/lib/config.mjs and site/js/util.js.
-// Output: build/weekly-demo/<previewId>__<variant>.png and .json ({ ok, w, h, taps } or { ok: false, error }).
+// Output: build/weekly-demo/<previewId>__<variant>.png and .json ({ ok, w, h, taps, texts } or
+// { ok: false, error }). `texts` (shown text) lets scripts/lib/links.mjs find where a tap leads.
 package weeklydemo
 
 import android.content.res.Configuration
@@ -21,6 +22,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasClickAction
@@ -127,9 +129,21 @@ class WeeklyDemoCapture(private val s: Shot) {
                 "{\"x\":${b.left / rw},\"y\":${b.top / rh},\"w\":${b.width / rw}," +
                     "\"h\":${b.height / rh},\"label\":${json(label)}}"
               }
+      // Visible text (not editable field values), to match a tapped label with the screen it opens.
+      val texts =
+          rule
+              .onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text))
+              .fetchSemanticsNodes(atLeastOneRootRequired = false)
+              .filter { it.root == rootNode.root }
+              .flatMap { n -> n.config.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text.trim() } }
+              .filter { it.isNotEmpty() }
+              .distinct()
+              .take(80)
+              .joinToString(",") { json(it.take(120)) }
       File(out, "$base.json")
           .writeText(
-              "{\"ok\":true,\"w\":${bmp.width},\"h\":${bmp.height},\"taps\":[${taps.joinToString(",")}]}")
+              "{\"ok\":true,\"w\":${bmp.width},\"h\":${bmp.height}," +
+                  "\"taps\":[${taps.joinToString(",")}],\"texts\":[$texts]}")
     } catch (t: Throwable) {
       File(out, "$base.json").writeText("{\"ok\":false,\"error\":${json(t.toString().take(400))}}")
     }

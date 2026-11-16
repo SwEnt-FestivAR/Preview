@@ -7,7 +7,7 @@ import { PNG } from 'pngjs';
 /**
  * Reads the PNG + JSON written by the capture test for every preview and variant, copies each
  * distinct image to <history>/shots/<hash>.png and returns:
- *   shots:  { [previewId]: { [variant]: { img, w, h, taps } } }
+ *   shots:  { [previewId]: { [variant]: { img, w, h, taps, texts? } } }   (texts: light only)
  *   failed: [{ id, variant, error }]
  */
 export function storeShots(capturesDir, previews, historyDir) {
@@ -23,7 +23,9 @@ export function storeShots(capturesDir, previews, historyDir) {
       }
       const img = saveImage(fs.readFileSync(base + '.png'), historyDir);
       const taps = meta.taps.filter((t) => t.w > 0 && t.h > 0);
-      (shots[p.id] ||= {})[variant] = { img, w: meta.w, h: meta.h, taps };
+      const shot = { img, w: meta.w, h: meta.h, taps };
+      if (variant === 'light') shot.texts = meta.texts || []; // for links.mjs, removed before saving
+      (shots[p.id] ||= {})[variant] = shot;
     }
   }
   dropDuplicateVariants(shots);
