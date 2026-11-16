@@ -34,3 +34,15 @@ import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+
+class Shot(
+    val id: String,
+    val cls: String,
+    val fn: String,
+    val w: Int,
+    val h: Int,
+    val bg: Boolean,
+    val variant: String,
+) {
+  override fun toString() = "$id@$variant"
+}
