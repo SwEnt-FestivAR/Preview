@@ -17,7 +17,7 @@ on:
       backfill:
         description: "Also (re)build every sprint from this sprint number on, oldest first (e.g. 4). Empty = no."
         required: false
-  push: # a change to this repo rebuilds the current sprint in full (captures included)
+  push: # a change to this repo rebuilds every sprint from FIRST_SPRINT on (scripts/lib/config.mjs)
     branches: [main]
     paths: ["site/**", "scripts/**", "capture/**", "demo.json", ".github/workflows/**"]
 
@@ -89,8 +89,10 @@ jobs:
         run: |
           DATE="${{ github.event.inputs.date }}"
           DATE="${DATE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
+          FROM="${{ github.event.inputs.backfill }}"
+          if [ "${{ github.event_name }}" = push ]; then FROM=first; fi
           # Dates to capture, oldest first: a baseline or backfilled sprints, then this one.
-          for AT in $(node scripts/sprint.mjs "$DATE" history "${{ github.event.inputs.backfill }}"); do
+          for AT in $(node scripts/sprint.mjs "$DATE" history "$FROM"); do
             REF="$(git -C festivar rev-list -1 --before="$AT" origin/main)"
             bash scripts/capture.sh festivar "$REF" "$AT" history
           done

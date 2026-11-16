@@ -16,6 +16,9 @@ export const TEST_DEST = 'app/src/test/java/weeklydemo/WeeklyDemoCapture.kt';
  */
 export const SPRINTS = { anchor: { number: 6, friday: '2026-11-13' }, hour: 12, timeZone: 'Europe/Zurich' };
 
+/** Oldest sprint kept: a push rebuilds every sprint from this one on (it is the reference). */
+export const FIRST_SPRINT = 4;
+
 /** Size every screen is rendered at (dp), whatever its @Preview says, so all phones look alike. */
 export const PHONE = { w: 412, h: 915 };
 
