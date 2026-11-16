@@ -69,3 +69,14 @@ section > p.sub { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
 .badge.changed { background: var(--chg-bg); color: var(--chg); }
 .badge.same { background: var(--line); color: var(--muted); }
 
+.viewer { position: relative; background: repeating-conic-gradient(var(--line) 0 25%, transparent 0 50%) 0 0 / 16px 16px; border-radius: 10px; display: flex; justify-content: center; align-items: flex-start; padding: 14px; min-height: 160px; }
+.shot { position: relative; max-width: 100%; border-radius: 18px; overflow: hidden; box-shadow: 0 0 0 6px #1d1c1a, 0 12px 30px rgba(0, 0, 0, 0.18); line-height: 0; }
+.shot.component { border-radius: 8px; box-shadow: 0 0 0 1px var(--line), 0 6px 18px rgba(0, 0, 0, 0.12); }
+.shot img { display: block; max-width: 100%; max-height: 520px; }
+.shot .after { position: absolute; inset: 0; clip-path: inset(0 0 0 50%); }
+.shot .after img { width: 100%; height: 100%; max-height: none; object-fit: fill; }
+.shot .line { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: #e24b4a; }
+.shot .lbl { position: absolute; top: 8px; font-size: 11px; line-height: 1; padding: 4px 7px; border-radius: 6px; background: rgba(0, 0, 0, 0.6); color: #fff; }
+.shot .lbl.b { left: 8px; } .shot .lbl.a { right: 8px; }
+.slider { width: 100%; accent-color: #e24b4a; }
+
