@@ -90,3 +90,28 @@ function diffRatio(a, b) {
     if (Math.abs(A.data[i] - B.data[i]) + Math.abs(A.data[i + 1] - B.data[i + 1]) + Math.abs(A.data[i + 2] - B.data[i + 2]) > 24) n++;
   return n / (A.width * A.height);
 }
+
+const groups = {};
+for (const p of previews) if (shotOf[p.id]?.light) (groups[p.group] ||= []).push(p);
+
+const screens = Object.entries(groups).map(([group, ps]) => {
+  const labels = stateLabels(ps.map((p) => p.fn));
+  const states = ps.map((p, i) => {
+    const before = prevStates[p.id];
+    const st = { id: p.id, fn: p.fn, label: labels[i], variants: shotOf[p.id], status: 'same', diff: 0 };
+    if (!prev) st.status = 'same';
+    else if (!before) st.status = 'new';
+    else {
+      const d = diffRatio(before.variants.light.img, st.variants.light.img);
+      if (d > 0.001) {
+        st.status = 'changed';
+        st.diff = Math.round(d * 1000) / 10;
+        st.before = Object.fromEntries(Object.entries(before.variants).map(([v, x]) => [v, x.img]));
+      }
+    }
+    return st;
+  });
+  const hadGroup = prev?.screens.some((s) => s.group === group);
+  const status = prev && !hadGroup ? 'new' : states.some((s) => s.status !== 'same') ? 'changed' : 'same';
+  return { group, file: ps[0].file, kind: ps[0].kind, status, prs: [], states };
+});
