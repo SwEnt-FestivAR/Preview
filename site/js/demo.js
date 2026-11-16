@@ -1,31 +1,14 @@
-// Demo mode: a floating phone that walks through every state of the new and changed screens.
-// ← / → (or the arrows) move between steps, space toggles autoplay, Escape closes.
-import { $, h, esc, shotUrl, weekNumber, prLink, variantsOf, sleep, STATUS, VARIANTS } from './util.js';
+// Demo mode: a floating phone that walks through screens state by state, with a hand tapping the
+// element that leads to the next state. ← / → (or the arrows) move, space toggles autoplay,
+// Escape closes.
+import { $, h, esc, shotUrl, prLink, variantsOf, sleep, STATUS, VARIANTS } from './util.js';
 import { pickTap, animateTap, hideHand } from './tap.js';
+import { buildSteps } from './steps.js';
 
 const AUTOPLAY_MS = 3200;
 
-/**
- * Steps of the demo: one per state, screens first then components. Without an explicit list,
- * the new and changed screens of the week (or every screen when nothing changed), minus the ones
- * marked `skip` in demo.json. demo.json `order` reorders the states of a screen.
- */
-function buildSteps(week, overrides, screens) {
-  let list = screens || week.screens.filter((s) => s.status !== 'same' && !overrides[s.group]?.skip);
-  if (!list.length) list = week.screens.filter((s) => s.kind === 'screen');
-  list = [...list].sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'screen' ? -1 : 1));
-  const steps = [];
-  for (const screen of list) {
-    const order = overrides[screen.group]?.order || [];
-    const rank = (s) => order.indexOf(s.fn) + 1 || order.length + 1;
-    const states = [...screen.states].sort((a, b) => rank(a) - rank(b));
-    states.forEach((state, k) => steps.push({ screen, state, k, n: states.length, wipe: state.status === 'changed' && state.before }));
-  }
-  return steps;
-}
-
 export const Demo = {
-  week: null,
+  sprint: null,
   overrides: {},
   steps: [],
   i: 0,
@@ -33,9 +16,9 @@ export const Demo = {
   busy: false,
   timer: null,
 
-  /** Opens the demo on `screens`, or on the whole week. */
-  open(week, overrides, screens) {
-    Object.assign(this, { week, overrides, steps: buildSteps(week, overrides, screens), i: 0, variant: 'light', whole: !screens });
+  /** Opens the demo on `screens` (all their states), or the sprint demo. */
+  open(sprint, overrides, screens) {
+    Object.assign(this, { sprint, overrides, steps: buildSteps(sprint, overrides, screens), i: 0, variant: 'light', whole: !screens });
     $('#demo').hidden = false;
     document.body.style.overflow = 'hidden';
     $('#prev').onclick = () => this.go(-1);
@@ -50,7 +33,7 @@ export const Demo = {
     this.stopAutoplay();
     $('#demo').hidden = true;
     document.body.style.overflow = '';
-    if (location.hash.endsWith('/demo')) history.replaceState(null, '', `#${this.week.id}`);
+    if (location.hash.endsWith('/demo')) history.replaceState(null, '', `#${this.sprint.id}`);
   },
 
   onKey(e) {
@@ -114,7 +97,7 @@ export const Demo = {
   show(first, dir = 1) {
     const step = this.steps[this.i];
     const variant = this.variantOf(step);
-    const kind = step.screen.kind === 'component' ? ' component' : variant === 'tablet' ? ' tablet' : '';
+    const kind = step.screen.kind === 'component' ? ' component' : '';
     $('#device').className = `device${kind}`;
     if (first || dir < 0) hideHand(true);
     else setTimeout(() => !this.busy && hideHand(false), 450);
@@ -138,7 +121,7 @@ export const Demo = {
       requestAnimationFrame(() => requestAnimationFrame(() => img.classList.remove('enter', 'leave')));
       return;
     }
-    // Changed state: show last week's version, then wipe in the new one.
+    // Changed state: show the previous sprint's version, then wipe in the new one.
     add(before, '');
     const tag = screen.appendChild(h('<span class="ba-tag">Before</span>'));
     const after = add(current, 'wipe');
@@ -153,7 +136,7 @@ export const Demo = {
 
   showCaption({ screen, state, k, n, wipe }) {
     const position = `${this.i + 1}/${this.steps.length}`;
-    const kicker = this.whole ? `Week ${weekNumber(this.week.id)} · ${position}` : position;
+    const kicker = this.whole ? `Sprint ${this.sprint.number} · ${position}` : position;
     const status = state.status === 'same' ? screen.status : state.status;
     const note = this.overrides[screen.group]?.notes?.[state.fn];
     $('#caption').innerHTML = `
@@ -162,7 +145,7 @@ export const Demo = {
       <div class="state">${esc(state.label)}${n > 1 ? ` <span class="dim">· state ${k + 1}/${n}</span>` : ''}</div>
       <span class="badge ${status}">${STATUS[status]}${wipe ? ` · ${state.diff}% of pixels` : ''}</span>
       ${note ? `<div class="meta note">${esc(note)}</div>` : ''}
-      ${screen.prs.length ? `<div class="meta">PRs ${screen.prs.map((p) => prLink(this.week.repo, p)).join(' ')}</div>` : ''}
+      ${screen.prs.length ? `<div class="meta">PRs ${screen.prs.map((p) => prLink(this.sprint.repo, p)).join(' ')}</div>` : ''}
       <div class="tapnote"></div>`;
   },
 
