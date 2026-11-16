@@ -79,6 +79,11 @@ jobs:
           java-version: "21"
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+      - name: Cache Robolectric's Android jars
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/robolectric
+          key: robolectric-${{ runner.os }}-v1
 
       - name: Clone FestivAR (read-only)
         run: git clone https://github.com/SwEnt-FestivAR/FestivAR.git festivar
@@ -91,10 +96,18 @@ jobs:
           DATE="${DATE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
           FROM="${{ github.event.inputs.backfill }}"
           if [ "${{ github.event_name }}" = push ]; then FROM=first; fi
-          # Dates to capture, oldest first: a baseline or backfilled sprints, then this one.
-          for AT in $(node scripts/sprint.mjs "$DATE" history "$FROM"); do
+          # Dates to capture, oldest first: a baseline or backfilled sprints, then this one. An older
+          # sprint that cannot be captured is skipped (the next one then compares with what exists);
+          # the current sprint must succeed.
+          DATES="$(node scripts/sprint.mjs "$DATE" history "$FROM")"
+          LAST="$(echo "$DATES" | tail -n 1)"
+          for AT in $DATES; do
             REF="$(git -C festivar rev-list -1 --before="$AT" origin/main)"
-            bash scripts/capture.sh festivar "$REF" "$AT" history
+            if [ "$AT" = "$LAST" ]; then
+              bash scripts/capture.sh festivar "$REF" "$AT" history
+            else
+              bash scripts/capture.sh festivar "$REF" "$AT" history || echo "::warning::Sprint ending $AT skipped: capture failed."
+            fi
           done
 
       - name: Save the history
