@@ -248,3 +248,59 @@ const Demo = {
     await sleep(120);
   },
 
+  show(first, dir = 1) {
+    const step = this.cur();
+    const { sc, st } = step;
+    const vk = this.vOf(step);
+    const v = st.variants[vk];
+    const ov = overrides[sc.group] || {};
+    const device = $('#device');
+    device.className = 'device' + (sc.kind === 'component' ? ' component' : vk === 'tablet' ? ' tablet' : '');
+    const screen = $('#screen');
+    screen.style.background = vk === 'dark' ? '#121212' : '#fff';
+    const hand = $('#hand');
+    if (first || dir < 0) { hand.classList.remove('show'); hand.style.transform = ''; }
+    else setTimeout(() => { if (!this.busy) { hand.classList.remove('show'); } }, 450);
+
+    const old = [...screen.querySelectorAll('img, .wipe-line, .ba-tag')];
+    const add = (src, cls) => { const im = h(`<img src="${src}" alt="" class="${cls}">`); screen.append(im); return im; };
+    old.forEach((o) => { if (o.tagName === 'IMG') o.classList.add(dir > 0 ? 'leave' : 'enter'); setTimeout(() => o.remove(), 460); });
+
+    if (step.diff && step.st.before[vk]) {
+      add(img(step.st.before[vk]), '');
+      const tag = h('<span class="ba-tag" style="left:16px">Avant</span>');
+      screen.append(tag);
+      const after = add(img(v.img), 'wipe');
+      const line = h('<div class="wipe-line"></div>');
+      screen.append(line);
+      setTimeout(() => { after.classList.remove('wipe'); line.style.left = '0'; tag.textContent = 'Après'; }, 900);
+      setTimeout(() => line.remove(), 1900);
+    } else {
+      const im = add(img(v.img), dir > 0 ? 'enter' : 'leave');
+      requestAnimationFrame(() => requestAnimationFrame(() => im.classList.remove('enter', 'leave')));
+    }
+
+    const intro = this.intro ? `Semaine ${week.id.split('-W')[1]} · ${this.i + 1}/${this.steps.length}` : `${this.i + 1}/${this.steps.length}`;
+    $('#caption').innerHTML = `
+      <div class="kicker">${esc(intro)}</div>
+      <h2>${esc(pretty(sc.group))}</h2>
+      <div class="state">${esc(st.label)}${step.n > 1 ? ` <span style="opacity:.6">· état ${step.k + 1}/${step.n}</span>` : ''}</div>
+      <span class="badge ${st.status === 'same' ? sc.status : st.status}">${STATUS[st.status === 'same' ? sc.status : st.status]}${step.diff ? ` · ${st.diff}% des pixels` : ''}</span>
+      ${ov.notes?.[st.fn] ? `<div class="meta" style="color:#f1efe8">${esc(ov.notes[st.fn])}</div>` : ''}
+      ${sc.prs.length ? `<div class="meta">PR ${sc.prs.map((n) => `<a href="https://github.com/${week.repo}/pull/${n}" target="_blank">#${n}</a>`).join(' ')}</div>` : ''}
+      <div class="tapnote"></div>`;
+
+    const seg = $('#demo-variant');
+    seg.innerHTML = '';
+    Object.keys(VARIANTS).filter((k) => st.variants[k]).forEach((k) => {
+      const b = h(`<button class="${k === vk ? 'on' : ''}">${VARIANTS[k]}</button>`);
+      b.onclick = () => { this.variant = k; this.show(true); };
+      seg.append(b);
+    });
+    $('#demo-bar').style.width = ((this.i + 1) / this.steps.length) * 100 + '%';
+    $('#prev').style.visibility = this.i > 0 ? 'visible' : 'hidden';
+    $('#next').style.visibility = this.i < this.steps.length - 1 ? 'visible' : 'hidden';
+  },
+};
+
+// Where the image's pixels really are inside its (object-fit: contain, top) box.
