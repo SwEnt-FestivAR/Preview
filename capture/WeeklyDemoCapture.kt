@@ -114,3 +114,6 @@ class WeeklyDemoCapture(private val s: Shot) {
             val roots = rule.onAllNodes(isRoot())
             roots[roots.fetchSemanticsNodes().size - 1]
           }
+      val bmp = root.captureToImage().asAndroidBitmap()
+      File(out, "$base.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+
