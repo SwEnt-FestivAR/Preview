@@ -108,3 +108,48 @@ function section(main, title, sub, list) {
   main.append(sec);
 }
 
+function card(sc) {
+  let st = sc.states.find((x) => x.status !== 'same') || sc.states[0];
+  let variant = 'light';
+  const el = h(`<div class="card">
+    <div class="card-head"><div><h3>${esc(pretty(sc.group))}</h3><small>${esc(sc.file.replace('app/src/main/java/com/android/festivar/', ''))}</small></div><span class="badge ${sc.status}">${STATUS[sc.status]}</span></div>
+    <div class="viewer"></div>
+    <div class="chips states"></div>
+    <div class="seg variants"></div>
+    ${sc.prs.length ? `<div class="prs-inline">PR : ${sc.prs.map((n) => `<a href="https://github.com/${week.repo}/pull/${n}">#${n}</a>`).join(' ')}</div>` : ''}
+    <button class="ghost">▶ Voir en démo</button>
+  </div>`);
+  $('button.ghost', el).onclick = () => Demo.open([sc]);
+  const draw = () => {
+    if (!st.variants[variant]) variant = 'light';
+    const cur = st.variants[variant];
+    const before = st.before?.[variant];
+    const comp = sc.kind === 'component' ? ' component' : '';
+    const v = $('.viewer', el);
+    if (before && before !== cur.img) {
+      v.innerHTML = `<div style="width:100%"><div style="display:flex;justify-content:center"><div class="shot${comp}">
+        <img src="${img(before)}" alt="Avant"><div class="after"><img src="${img(cur.img)}" alt="Après"></div><div class="line"></div>
+        <span class="lbl b">Avant</span><span class="lbl a">Après · ${st.diff}%</span></div></div>
+        <input class="slider" type="range" min="0" max="100" value="50" aria-label="Avant / après"></div>`;
+      const after = $('.after', v), line = $('.line', v);
+      $('.slider', v).oninput = (e) => { after.style.clipPath = `inset(0 0 0 ${e.target.value}%)`; line.style.left = e.target.value + '%'; };
+    } else {
+      v.innerHTML = `<div class="shot${comp}"><img src="${img(cur.img)}" alt="${esc(st.label)}"></div>`;
+    }
+    $('.states', el).innerHTML = '';
+    sc.states.forEach((x) => {
+      const b = h(`<button class="chip${x === st ? ' on' : ''}">${esc(x.label)}${x.status !== 'same' ? `<i class="${x.status}"></i>` : ''}</button>`);
+      b.onclick = () => { st = x; draw(); };
+      $('.states', el).append(b);
+    });
+    $('.variants', el).innerHTML = '';
+    Object.keys(VARIANTS).filter((k) => st.variants[k]).forEach((k) => {
+      const b = h(`<button class="${k === variant ? 'on' : ''}">${VARIANTS[k]}</button>`);
+      b.onclick = () => { variant = k; draw(); };
+      $('.variants', el).append(b);
+    });
+  };
+  draw();
+  return el;
+}
+
