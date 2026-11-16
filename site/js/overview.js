@@ -28,7 +28,10 @@ function header(week) {
     ? ` · <a href="https://github.com/${week.repo}/commit/${week.commit}">${week.commit.slice(0, 7)}</a>`
     : '';
   const compared = week.previous ? ` · compared with ${esc(week.previous)}` : ' · baseline week';
-  return h(`<div class="hero"><h1>Week ${weekNumber(week.id)}</h1>
+  const lastWeek = week.previous
+    ? `<a class="prev-week" href="#${esc(week.previous)}/demo">▶ Week ${weekNumber(week.previous)} demo</a>`
+    : '';
+  return h(`<div class="hero"><div class="hero-row"><h1>Week ${weekNumber(week.id)}</h1>${lastWeek}</div>
     <p>${shortDate(week.start)} → ${shortDate(week.end)}${commit}${compared}</p></div>`);
 }
 
