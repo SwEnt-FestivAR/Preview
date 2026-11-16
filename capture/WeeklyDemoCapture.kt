@@ -46,3 +46,10 @@ class Shot(
 ) {
   override fun toString() = "$id@$variant"
 }
+
+@RunWith(ParameterizedRobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(sdk = [34], qualifiers = "w1000dp-h1300dp-xhdpi")
+class WeeklyDemoCapture(private val s: Shot) {
+  @get:Rule val rule = createComposeRule()
+
