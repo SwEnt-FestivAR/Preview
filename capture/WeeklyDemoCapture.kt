@@ -141,3 +141,7 @@ class WeeklyDemoCapture(private val s: Shot) {
       File(out, "$base.json").writeText("{\"ok\":false,\"error\":${json(t.toString().take(400))}}")
     }
   }
+
+  private fun json(v: String) =
+      "\"" + v.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", " ").replace("\t", " ") + "\""
+}
