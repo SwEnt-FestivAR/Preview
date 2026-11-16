@@ -1,28 +1,29 @@
 // Reads and writes the history folder (a checkout of the `data` branch). Layout:
-//   shots/<hash>.png   every distinct image ever captured
-//   weeks/<id>.json    one week, as shown by the site (format: AGENTS.md)
-//   index.json         [{ id, start, end, commit, stats }], newest first
+//   shots/<hash>.png     every distinct image ever captured
+//   sprints/<id>.json    one sprint, as shown by the site (format: AGENTS.md)
+//   index.json           [{ id, number, start, end, commit, stats }], newest first
+// Entries of an older format (ISO weeks) are ignored and dropped from the index.
 import fs from 'node:fs';
 import path from 'node:path';
 
 const readJSON = (file, fallback) => (fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : fallback);
 
-/** Creates the folders if needed and returns the weeks index. */
+/** Creates the folders if needed and returns the sprint index. */
 export function openHistory(dir) {
-  for (const sub of ['shots', 'weeks']) fs.mkdirSync(path.join(dir, sub), { recursive: true });
-  return readJSON(path.join(dir, 'index.json'), []);
+  for (const sub of ['shots', 'sprints']) fs.mkdirSync(path.join(dir, sub), { recursive: true });
+  return readJSON(path.join(dir, 'index.json'), []).filter((e) => Number.isInteger(e.number));
 }
 
-/** The latest week strictly before `weekId`, or null. */
-export function previousWeek(dir, index, weekId) {
-  const entry = index.filter((w) => w.id < weekId).sort((a, b) => b.id.localeCompare(a.id))[0];
-  return entry ? readJSON(path.join(dir, 'weeks', entry.id + '.json'), null) : null;
+/** The latest sprint saved before sprint `number`, or null. */
+export function previousSprint(dir, index, number) {
+  const entry = index.filter((e) => e.number < number).sort((a, b) => b.number - a.number)[0];
+  return entry ? readJSON(path.join(dir, 'sprints', entry.id + '.json'), null) : null;
 }
 
-/** Writes the week and adds (or replaces) it in the index. */
-export function saveWeek(dir, index, week) {
-  fs.writeFileSync(path.join(dir, 'weeks', week.id + '.json'), JSON.stringify(week));
-  const entry = { id: week.id, start: week.start, end: week.end, commit: week.commit, stats: week.stats };
-  const next = index.filter((w) => w.id !== week.id).concat(entry).sort((a, b) => b.id.localeCompare(a.id));
-  fs.writeFileSync(path.join(dir, 'index.json'), JSON.stringify(next, null, 2));
+/** Writes the sprint and adds (or replaces) it in the index. */
+export function saveSprint(dir, index, sprint) {
+  fs.writeFileSync(path.join(dir, 'sprints', sprint.id + '.json'), JSON.stringify(sprint));
+  const { id, number, start, end, commit, stats } = sprint;
+  const next = index.filter((e) => e.id !== id).concat({ id, number, start, end, commit, stats });
+  fs.writeFileSync(path.join(dir, 'index.json'), JSON.stringify(next.sort((a, b) => b.number - a.number), null, 2));
 }

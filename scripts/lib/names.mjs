@@ -1,4 +1,4 @@
-// Naming helpers: week ids and human-readable names derived from Kotlin identifiers.
+// Naming helpers: human-readable names derived from Kotlin identifiers.
 
 /** Splits a camel-case identifier into words: "TaskDetailsOpen" -> ["Task", "Details", "Open"]. */
 export function words(identifier) {
@@ -8,15 +8,6 @@ export function words(identifier) {
 /** "TaskDetailsScreen" -> "Task Details Screen". */
 export function prettyName(identifier) {
   return words(identifier).join(' ');
-}
-
-/** ISO 8601 week id of a date, for example "2026-W47". */
-export function isoWeek(date) {
-  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-  const year = d.getUTCFullYear();
-  const week = Math.ceil(((d - Date.UTC(year, 0, 1)) / 864e5 + 1) / 7);
-  return `${year}-W${String(week).padStart(2, '0')}`;
 }
 
 /**

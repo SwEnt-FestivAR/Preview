@@ -1,12 +1,12 @@
-// Groups previews into screens and compares them with the previous week.
+// Groups previews into screens and compares them with the previous sprint.
 import { CHANGE_THRESHOLD } from './config.mjs';
 import { prettyName, stateLabels } from './names.mjs';
 import { diffRatio } from './shots.mjs';
 
 /**
- * Builds the `screens` of a week. All previews of one Kotlin file form one screen; each preview
- * is one of its states. Status is "new", "changed" or "same" compared with `previous` (a week
- * object, or null for the first week, where everything is "same").
+ * Builds the `screens` of a sprint. All previews of one Kotlin file form one screen; each preview
+ * is one of its states. Status is "new", "changed" or "same" compared with `previous` (a sprint
+ * object, or null for the first sprint, where everything is "same").
  */
 export function buildScreens(previews, shots, previous, historyDir) {
   const before = {};
@@ -41,7 +41,7 @@ function compareState(preview, label, variants, before, historyDir) {
   };
 }
 
-/** Groups present last week and gone now. */
+/** Groups present in the previous sprint and gone now. */
 export function removedScreens(previous, screens) {
   const now = new Set(screens.map((s) => s.group));
   return (previous?.screens || []).filter((s) => !now.has(s.group)).map((s) => s.group);
