@@ -15,9 +15,17 @@ echo "::group::Capture $REF ($COMMIT) for sprint of $DATE"
 # compiles our capture test (Robolectric can only render Compose inside a test).
 rm -rf "$FA/app/src/test/java" "$FA/app/src/test/kotlin"
 node "$HERE/scripts/scan-previews.mjs" "$FA" "$HERE/previews.json"
-rm -rf "$FA/app/build/weekly-demo"
-# A preview that cannot render only fails its own capture; the others still run.
-(cd "$FA" && ./gradlew :app:testDebugUnitTest --tests 'weeklydemo.*' --continue --no-daemon -q) || echo "Some captures failed (listed on the site)."
+# A preview that cannot render only fails its own capture; the others still run. When nothing at
+# all was captured (typically Robolectric failing to download its Android jar), show the cause and
+# retry once.
+for TRY in 1 2; do
+  rm -rf "$FA/app/build/weekly-demo"
+  (cd "$FA" && ./gradlew :app:testDebugUnitTest --tests 'weeklydemo.*' --continue --no-daemon -q) ||
+    echo "Some captures failed (listed on the site)."
+  if ls "$FA"/app/build/weekly-demo/*.json > /dev/null 2>&1; then break; fi
+  echo "::warning::No capture written (try $TRY). First test failure:"
+  grep -h -m1 -A15 "<failure" "$FA"/app/build/test-results/testDebugUnitTest/*.xml 2>/dev/null | head -20 || true
+done
 node "$HERE/scripts/build-sprint.mjs" --captures "$FA/app/build/weekly-demo" --previews "$HERE/previews.json" \
   --history "$HIST" --date "$DATE" --commit "$COMMIT"
 git -C "$FA" checkout -q --force "$REF" -- app/src/test 2>/dev/null || true
