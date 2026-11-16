@@ -81,7 +81,12 @@ Generated, never committed on `main` (see `.gitignore`): `previews.json`, `site/
    `demo.json` are deployed to Pages.
 
 Triggers: the Friday schedule, the manual "Run workflow" button (optional date to rebuild a past
-week), and a push to `main` touching `site/` or `demo.json` (republish without recapturing).
+week), and a push to `main` touching the site, scripts, capture test, `demo.json` or workflow.
+Every run is a full run (capture, compare, save, deploy); a run in a week that already has a
+build replaces that week.
+
+A run whose captures mostly fail (FestivAR not compiling, say) fails on purpose before saving
+anything (`MIN_SUCCESS_RATIO` in `scripts/lib/config.mjs`): the previous site stays online.
 
 GitHub cron is UTC only: two crons are listed and the `when` job keeps the one matching the
 current Swiss offset. Keep both when editing the schedule.

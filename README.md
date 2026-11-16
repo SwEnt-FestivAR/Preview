@@ -32,7 +32,7 @@ Nothing to do by hand.
 
 - Rebuild a week: Actions → *Weekly demo* → *Run workflow* (optional date `YYYY-MM-DD`).
 - The first run also captures the week before, so the first page already has comparisons.
-- Changing only `site/` or `demo.json` republishes without recapturing.
+- Every run is complete (captures included), including runs started by a push to `main`.
 
 Setup, once: Settings → Pages → Source = **GitHub Actions**.
 
