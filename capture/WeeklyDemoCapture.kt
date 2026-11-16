@@ -74,3 +74,18 @@ class WeeklyDemoCapture(private val s: Shot) {
       val night = s.variant == "dark"
       val tablet = s.variant == "tablet"
       rule.mainClock.autoAdvance = false
+      rule.setContent {
+        val cfg =
+            Configuration(LocalConfiguration.current).apply {
+              uiMode =
+                  (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
+                      (if (night) Configuration.UI_MODE_NIGHT_YES
+                      else Configuration.UI_MODE_NIGHT_NO)
+              if (s.variant == "font") fontScale = 1.5f
+              if (tablet) {
+                screenWidthDp = 1000
+                screenHeightDp = 720
+                smallestScreenWidthDp = 720
+              }
+            }
+        val density = LocalDensity.current.density
