@@ -311,3 +311,22 @@ function contentRect(el, v) {
   return { left: b.left + (b.width - w) / 2, top: b.top, width: w, height: hh };
 }
 
+function pickTap(taps, hint, exact) {
+  if (!taps?.length) return null;
+  const norm = (s) => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const hw = words(hint).map(norm).filter((x) => x.length > 2);
+  let best = null, score = 0;
+  for (const t of taps) {
+    const l = norm(t.label);
+    if (exact && l.includes(norm(hint))) return t;
+    const sc = hw.filter((x) => l.includes(x)).length;
+    if (sc > score) { score = sc; best = t; }
+  }
+  if (best) return best;
+  // Otherwise the most "button-like" element: labelled, not a full-screen container, lowest on screen.
+  const cands = taps.filter((t) => t.label && t.w * t.h < 0.25 && t.w * t.h > 0.0005);
+  return cands.sort((a, b) => b.y + b.h - (a.y + a.h))[0] || null;
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+init();
