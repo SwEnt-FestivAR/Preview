@@ -304,3 +304,10 @@ const Demo = {
 };
 
 // Where the image's pixels really are inside its (object-fit: contain, top) box.
+function contentRect(el, v) {
+  const b = { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight };
+  const s = Math.min(b.width / v.w, b.height / v.h);
+  const w = v.w * s, hh = v.h * s;
+  return { left: b.left + (b.width - w) / 2, top: b.top, width: w, height: hh };
+}
+
