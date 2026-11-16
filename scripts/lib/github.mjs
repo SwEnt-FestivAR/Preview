@@ -1,4 +1,4 @@
-// Merged pull requests of the week, from the GitHub REST API (read-only).
+// Merged pull requests of a sprint, from the GitHub REST API (read-only).
 import { MAX_PRS, REPO } from './config.mjs';
 
 async function api(url) {
@@ -10,13 +10,13 @@ async function api(url) {
 }
 
 /**
- * PRs merged between `start` and `end`. Each PR lists the screens (groups) whose Kotlin file it
- * touched, and each of those screens gets the PR number in its `prs`. Never throws: without
- * network or token the week is simply built with fewer or no PRs.
+ * PRs merged between `start` and `end` (exact times). Each PR lists the screens (groups) whose
+ * Kotlin file it touched, and each of those screens gets the PR number in its `prs`. Never throws: without
+ * network or token the sprint is simply built with fewer or no PRs.
  */
 export async function fetchMergedPRs(start, end, screens) {
-  const day = (d) => d.toISOString().slice(0, 10);
-  const query = encodeURIComponent(`repo:${REPO} is:pr is:merged merged:${day(start)}..${day(end)}`);
+  const time = (d) => d.toISOString().slice(0, 19) + 'Z';
+  const query = encodeURIComponent(`repo:${REPO} is:pr is:merged merged:${time(start)}..${time(end)}`);
   let items;
   try {
     items = (await api(`/search/issues?q=${query}&per_page=100&sort=updated`)).items.slice(0, MAX_PRS);
