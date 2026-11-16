@@ -21,3 +21,28 @@ function* walk(dir) {
 const PREVIEW = /@Preview(?:\s*\(([^)]*)\))?\s*(?:@[\w.]+(?:\s*\([^)]*\))?\s*)*(?:(?:private|internal|public)\s+)?fun\s+(\w+)\s*\(\s*\)/g;
 const num = (args, key) => Number((args.match(new RegExp(`${key}\\s*=\\s*(\\d+)`)) || [])[1] || 0);
 
+const previews = [];
+for (const file of walk(srcRoot)) {
+  const code = fs.readFileSync(file, 'utf8');
+  if (!code.includes('@Preview')) continue;
+  const pkg = (code.match(/^package\s+([\w.]+)/m) || [])[1] || '';
+  const jvmName = (code.match(/@file:JvmName\("(\w+)"\)/) || [])[1];
+  const base = path.basename(file, '.kt');
+  const cls = `${pkg ? pkg + '.' : ''}${jvmName || base[0].toUpperCase() + base.slice(1) + 'Kt'}`;
+  const rel = path.relative(festivar, file).replaceAll('\\', '/');
+  const kind = /\/components?\//.test(rel) ? 'component' : 'screen';
+  for (const m of code.matchAll(PREVIEW)) {
+    const args = m[1] || '';
+    previews.push({
+      id: `${base}.${m[2]}`,
+      group: base,
+      file: rel,
+      kind,
+      cls,
+      fn: m[2],
+      w: num(args, 'widthDp') || 412,
+      h: num(args, 'heightDp'),
+      bg: /showBackground\s*=\s*true/.test(args),
+    });
+  }
+}
