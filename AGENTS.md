@@ -18,7 +18,10 @@ Compose) and publishes it to GitHub Pages:
   touched by a PR whose previews look identical is listed apart ("Touched without visible
   change"): the change is in a state no `@Preview` shows;
 - a **demo mode** shows screens on a floating phone, state after state, with a hand that taps the
-  element leading to the next state. The sprint demo ("Play the demo") shows only the normal use
+  element leading to the next state. A tap that opens another screen (an announcement card opens
+  its details) is followed by that screen (`scripts/lib/links.mjs`); when nothing plausible leads
+  to the next state, there is no tap, the phone just slides. Changed states replay their
+  before → after wipe on demand. The sprint demo ("Play the demo") shows only the normal use
   of new and changed screens; a card's "Play as demo" shows every state of that screen;
 - the page shows **every** screen and component of the sprint as a card (states, variants,
   before/after, its own demo), grouped: new, changed, touched without visible change, unchanged;
@@ -56,6 +59,7 @@ scripts/
     shots.mjs                  Stores images by content hash, pixel diff
     compare.mjs                Groups previews into screens, new/changed/same status
     github.mjs                 PRs merged during the sprint (GitHub REST API)
+    links.mjs                  Guesses which screen a tap opens (for the demo hand)
     history.mjs                Reads/writes the history folder (index + sprints)
 site/                          Static page published to GitHub Pages
   index.html                   Page shell and demo-mode markup
@@ -68,7 +72,7 @@ site/                          Static page published to GitHub Pages
   js/util.js                   DOM/format helpers, variant and status labels
   js/overview.js               Overview sections (header, stats, PRs, other screens)
   js/card.js                   One screen card (states, variants, before/after slider)
-  js/steps.js                  Which screens and states a demo walks through
+  js/steps.js                  Which screens and states a demo walks through (following links)
   js/demo.js                   Demo mode (navigation, autoplay, transitions)
   js/tap.js                    The tapping hand (target choice and animation)
 demo.json                      Optional per-screen tweaks of the demo mode
@@ -116,8 +120,9 @@ Change both sides together when you change one of these.
 
 **Capture output** (`capture/WeeklyDemoCapture.kt` → `scripts/lib/shots.mjs`), in the clone's
 `app/build/weekly-demo/`: `<previewId>__<variant>.png` and `<previewId>__<variant>.json`:
-`{ "ok": true, "w": px, "h": px, "taps": [{ "x", "y", "w", "h", "label" }] }` (tap boxes are
-fractions of the image) or `{ "ok": false, "error": "..." }`.
+`{ "ok": true, "w": px, "h": px, "taps": [{ "x", "y", "w", "h", "label" }], "texts": ["..."] }`
+(tap boxes are fractions of the image; `texts` = shown text, used by `links.mjs` then dropped)
+or `{ "ok": false, "error": "..." }`.
 
 **Variant ids** `light`, `dark`, `font`: defined in `scripts/lib/config.mjs`, handled in
 `capture/WeeklyDemoCapture.kt`, labelled in `site/js/util.js`.
@@ -145,7 +150,8 @@ fractions of the image) or `{ "ok": false, "error": "..." }`.
       "id": "TaskDetailsScreen.TaskDetailsOpenPreview", "fn": "TaskDetailsOpenPreview",
       "label": "Open", "status": "new" | "changed" | "same", "diff": 12.5,   // % of pixels
       "variants": { "light": { "img": "<hash>", "w", "h", "taps": [...] }, "dark": {...} },
-      "before": { "light": "<hash>", ... }   // only when status = "changed"
+      "before": { "light": "<hash>", ... },  // only when status = "changed"
+      "link": { "to": "<state id>", "tap": { "x", "y", "w", "h", "label" } }  // optional: the tap opens that state
     }]
   }],
   "removed": ["OldScreen"],
