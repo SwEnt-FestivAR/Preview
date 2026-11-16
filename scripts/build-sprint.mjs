@@ -10,6 +10,7 @@ import { sprintOf } from './lib/sprints.mjs';
 import { storeShots } from './lib/shots.mjs';
 import { buildScreens, removedScreens, sortScreens } from './lib/compare.mjs';
 import { fetchMergedPRs } from './lib/github.mjs';
+import { addLinks } from './lib/links.mjs';
 import { openHistory, previousSprint, saveSprint } from './lib/history.mjs';
 
 const { values: args } = parseArgs({
@@ -39,6 +40,7 @@ if (planned === 0 || (planned - failed.length) / planned < MIN_SUCCESS_RATIO) {
   throw new Error('Capture run looks broken: sprint not saved.');
 }
 const screens = sortScreens(buildScreens(previews, shots, previous, args.history));
+addLinks(screens);
 const prs = await fetchMergedPRs(sprint.start, capturedAt, screens);
 
 const result = {
