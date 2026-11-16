@@ -87,3 +87,13 @@ jobs:
           git commit -q -m "Week $(jq -r '.[0].id' index.json)" || echo "Nothing new"
           git push -q origin HEAD:data
 
+      - name: Assemble the site
+        run: |
+          mkdir -p site/data
+          [ -f history/index.json ] && cp -r history/index.json history/weeks history/shots site/data/
+          cp demo.json site/data/demo.json
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
