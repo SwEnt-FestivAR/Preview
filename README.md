@@ -1,6 +1,6 @@
 # Weekly demo
 
-Every Friday, a GitHub Actions workflow builds a visual demo of what changed in
+Every Friday at 07:30 (Swiss time), a GitHub Actions workflow builds a visual demo of what changed in
 [FestivAR](https://github.com/SwEnt-FestivAR/FestivAR) this week and publishes it to GitHub Pages:
 new screens, modified screens (before/after slider), every state and variant (light, dark,
 font ×1.5, tablet), the merged PRs, and a **demo mode** (floating phone, arrows ← →, a hand that
@@ -13,19 +13,22 @@ to FestivAR.
 ## How it works
 
 1. `scripts/scan-previews.mjs` finds every `@Preview` without arguments in the FestivAR clone and
-   generates `capture/WeeklyDemoCapture.kt` inside that clone.
+   copies the capture test (`capture/WeeklyDemoCapture.kt`) into that clone.
 2. The test renders each preview with Robolectric (no emulator, no new dependency: Compose test
    and Robolectric are already in FestivAR) and saves a PNG plus the clickable areas.
-3. `scripts/build-week.mjs` stores the images on the `data` branch (one copy per distinct image),
+3. `scripts/build-week.mjs` (helpers in `scripts/lib/`) stores the images on the `data` branch (one copy per distinct image),
    compares them with last week, fetches the merged PRs and writes `weeks/<id>.json`.
-4. `site/` is a static page that reads that data.
+4. `site/` is a static page (plain ES modules, no build step) that reads that data.
+
+Repository layout, data formats and the rules for contributors and AI agents: [AGENTS.md](AGENTS.md).
 
 Only screens that have a `@Preview` appear. All previews in the same file are one screen and
 its states (for example `TaskDetailsOpenPreview`, `TaskDetailsDonePreview`).
 
 ## Weekly run
 
-Automatic, every Friday at 07:30 Swiss time (GitHub may start it a few minutes late). Nothing to do by hand.
+Automatic, every Friday at 07:30 Swiss time (GitHub may start it a few minutes late).
+Nothing to do by hand.
 
 - Rebuild a week: Actions → *Weekly demo* → *Run workflow* (optional date `YYYY-MM-DD`).
 - The first run also captures the week before, so the first page already has comparisons.
@@ -37,7 +40,7 @@ Setup, once: Settings → Pages → Source = **GitHub Actions**.
 
 `demo.json` (optional), by screen (the file name without `.kt`): `skip`, `order` (preview
 function names), `taps` (label of the element the hand should tap from a state) and `notes`
-(text shown under the title).
+(text shown under the title). Format: [AGENTS.md](AGENTS.md#data-contracts).
 
 ## Local preview
 
