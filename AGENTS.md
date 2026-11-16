@@ -4,17 +4,21 @@ Guide for anyone (human or AI agent) changing this repository. Read it before ed
 
 ## What this repo does
 
-Every Friday at 07:30 Swiss time, a GitHub Actions workflow builds a visual weekly demo of
-[FestivAR](https://github.com/SwEnt-FestivAR/FestivAR) (Android, Kotlin, Jetpack Compose) and
-publishes it to GitHub Pages:
+Every Friday at 07:30 Swiss time, a GitHub Actions workflow builds a visual demo of the current
+sprint of [FestivAR](https://github.com/SwEnt-FestivAR/FestivAR) (Android, Kotlin, Jetpack
+Compose) and publishes it to GitHub Pages:
 
-- every `@Preview` of the app is rendered to PNG with Robolectric (no emulator), in several
-  variants (light, dark, font ×1.5, tablet);
-- the captures are compared with last week: new screens, changed screens (with a before/after
-  slider), unchanged screens;
-- the merged pull requests of the week are listed and linked to the screens they touched;
-- a **demo mode** shows the screens on a floating phone, state after state, with a hand that taps
-  the element leading to the next state.
+- **sprints** run from Friday 12:00 to the next Friday 12:00, Swiss time; Sprint 6 is
+  13 → 20 Nov 2026 and the others are counted from it (`SPRINTS` in `scripts/lib/config.mjs`);
+- every `@Preview` of the app is rendered to PNG with Robolectric (no emulator), in light, dark
+  and font ×1.5; screens are always rendered at one phone size (412×915 dp) so they all look alike;
+- the captures are compared with the previous sprint: new screens, changed screens (with a
+  before/after slider), unchanged screens;
+- the PRs merged during the sprint are listed and linked to the screens they touched;
+- a **demo mode** shows screens on a floating phone, state after state, with a hand that taps the
+  element leading to the next state. The sprint demo ("Play the demo") shows only the normal use
+  of new and changed screens; a card's "Play as demo" shows every state of that screen;
+- the page has a light/dark toggle and links to the previous sprint's demo.
 
 ## Golden rules
 
@@ -26,7 +30,7 @@ publishes it to GitHub Pages:
    test, Robolectric). Adding a Gradle plugin or library would need a change to FestivAR.
 3. **Only screens with a `@Preview` (without parameters) are shown.** Do not try to render real
    screens with ViewModels or Firebase: it would make the capture slow and flaky.
-4. **The weekly run must stay hands-off.** A change must not require a manual step on Friday.
+4. **The Friday run must stay hands-off.** A change must not require a manual step on Friday.
 5. **The `data` branch is history.** Never rewrite or force-push it; the workflow only appends.
 6. **Everything is in English**: code, comments, UI text, docs, commit messages.
 
@@ -36,27 +40,32 @@ publishes it to GitHub Pages:
 .github/workflows/weekly.yml   Schedule (Friday 07:30 Swiss), capture, save history, deploy Pages
 capture/WeeklyDemoCapture.kt   Robolectric test template copied into the FestivAR clone
 scripts/
-  capture.sh                   One full capture of FestivAR at a ref, recorded as one week
-  scan-previews.mjs            Finds @Preview functions, fills the test template
-  build-week.mjs               Turns captures into weeks/<id>.json (orchestration only)
+  capture.sh                   One full capture of FestivAR at a ref, recorded in one sprint
+  scan-previews.mjs            Finds @Preview functions, screen/component, fills the test template
+  build-sprint.mjs             Turns captures into sprints/<id>.json (orchestration only)
+  sprint.mjs                   Tells the workflow the sprint of a date and if a baseline is needed
   serve.mjs                    Local preview server
   lib/
-    config.mjs                 Shared settings: repo, paths, variants, thresholds
-    names.mjs                  Week ids, readable names and state labels
+    config.mjs                 Shared settings: repo, sprints, phone size, variants, thresholds
+    sprints.mjs                Sprint calendar (Friday 12:00 Swiss -> Friday 12:00)
+    names.mjs                  Readable names and state labels
     shots.mjs                  Stores images by content hash, pixel diff
     compare.mjs                Groups previews into screens, new/changed/same status
-    github.mjs                 Merged PRs of the week (GitHub REST API)
-    history.mjs                Reads/writes the history folder (index + weeks)
+    github.mjs                 PRs merged during the sprint (GitHub REST API)
+    history.mjs                Reads/writes the history folder (index + sprints)
 site/                          Static page published to GitHub Pages
   index.html                   Page shell and demo-mode markup
-  css/base.css                 Theme tokens (light/dark), base elements, top bar
+  logo.svg                     FestivAR logo (app_logo.xml of the app, coloured), also the favicon
+  css/base.css                 Theme tokens (light-dark()), base elements, top bar
   css/overview.css             Overview page
   css/demo.css                 Demo mode
-  js/main.js                   Entry point: loads data, week picker, URL hash
+  js/main.js                   Entry point: loads data, sprint picker, URL hash
+  js/theme.js                  Light/dark toggle (saved per browser)
   js/util.js                   DOM/format helpers, variant and status labels
   js/overview.js               Overview sections (header, stats, PRs, other screens)
   js/card.js                   One screen card (states, variants, before/after slider)
-  js/demo.js                   Demo mode (steps, navigation, autoplay, transitions)
+  js/steps.js                  Which screens and states a demo walks through
+  js/demo.js                   Demo mode (navigation, autoplay, transitions)
   js/tap.js                    The tapping hand (target choice and animation)
 demo.json                      Optional per-screen tweaks of the demo mode
 ```
@@ -64,26 +73,27 @@ demo.json                      Optional per-screen tweaks of the demo mode
 Generated, never committed on `main` (see `.gitignore`): `previews.json`, `site/data/`,
 `history/`, `festivar/`, `node_modules/`.
 
-## How a weekly run works
+## How a run works
 
 1. `weekly.yml` checks out this repo and the `data` branch (into `history/`), clones FestivAR.
 2. `scripts/capture.sh <festivar> <ref> <date> history`:
-   1. checks out `<ref>` in the clone;
+   1. checks out `<ref>` in the clone and removes its own unit tests there (never run, only
+      slowing the compilation);
    2. `scan-previews.mjs` writes `previews.json` and copies the filled test into the clone
       (`app/src/test/java/weeklydemo/`);
    3. runs `./gradlew :app:testDebugUnitTest --tests 'weeklydemo.*'`. Each preview × variant is
       one test; a failing preview only fails its own capture and is listed on the site;
-   4. `build-week.mjs` stores the images, compares with the previous week, fetches the PRs and
-      writes the week.
-3. On the very first run (no `history/index.json`), step 2 also runs for the commit of one week
-   earlier, so the first page already has comparisons.
+   4. `build-sprint.mjs` stores the images, compares with the previous sprint, fetches the PRs
+      and writes the sprint containing `<date>`.
+3. When no earlier sprint is saved yet (`scripts/sprint.mjs`), step 2 first runs for the last
+   commit before the current sprint started, so the first page already has comparisons.
 4. The history is pushed to the `data` branch, `site/` + `history/` (as `site/data/`) +
    `demo.json` are deployed to Pages.
 
 Triggers: the Friday schedule, the manual "Run workflow" button (optional date to rebuild a past
-week), and a push to `main` touching the site, scripts, capture test, `demo.json` or workflow.
-Every run is a full run (capture, compare, save, deploy); a run in a week that already has a
-build replaces that week.
+sprint), and a push to `main` touching the site, scripts, capture test, `demo.json` or workflow.
+Every run is a full run (capture, compare, save, deploy); a run in a sprint that already has a
+build replaces that sprint. The Friday 07:30 run captures the sprint just before it ends at noon.
 
 A run whose captures mostly fail (FestivAR not compiling, say) fails on purpose before saving
 anything (`MIN_SUCCESS_RATIO` in `scripts/lib/config.mjs`): the previous site stays online.
@@ -100,25 +110,26 @@ Change both sides together when you change one of these.
 `{ "ok": true, "w": px, "h": px, "taps": [{ "x", "y", "w", "h", "label" }] }` (tap boxes are
 fractions of the image) or `{ "ok": false, "error": "..." }`.
 
-**Variant ids** `light`, `dark`, `font`, `tablet`: defined in `scripts/lib/config.mjs`, handled in
+**Variant ids** `light`, `dark`, `font`: defined in `scripts/lib/config.mjs`, handled in
 `capture/WeeklyDemoCapture.kt`, labelled in `site/js/util.js`.
 
 **History** (`data` branch, served as `site/data/`):
 
 - `shots/<hash>.png`: every distinct image, stored once (16 hex chars of its SHA-1).
-- `index.json`: `[{ id, start, end, commit, stats }]`, newest first.
-- `weeks/<id>.json` (id like `2026-W47`):
+- `index.json`: `[{ id, number, start, end, commit, stats }]`, newest first.
+- `sprints/<id>.json` (id like `sprint-6`):
 
 ```jsonc
 {
-  "id": "2026-W47", "start": "ISO date", "end": "ISO date",
-  "commit": "FestivAR sha", "repo": "SwEnt-FestivAR/FestivAR", "previous": "2026-W46" | null,
+  "id": "sprint-6", "number": 6, "start": "ISO date", "end": "ISO date", "capturedAt": "ISO date",
+  "commit": "FestivAR sha", "repo": "SwEnt-FestivAR/FestivAR", "previous": "sprint-5" | null,
   "stats": { "newScreens", "changedScreens", "screens", "prs", "contributors", "failed" },
   "screens": [{
     "group": "TaskDetailsScreen",            // Kotlin file name = one screen
     "title": "Task Details Screen",
     "file": "app/src/main/java/.../TaskDetailsScreen.kt",
-    "kind": "screen" | "component",          // component = under a components/ folder
+    "kind": "screen" | "component",          // screen: *Screen.kt or a preview >= 600 dp tall,
+                                             // never under components/; rendered at 412x915 dp
     "status": "new" | "changed" | "same",
     "prs": [512],
     "states": [{                             // one per @Preview, in source order
@@ -144,7 +155,7 @@ Keys starting with `_` are documentation and ignored.
   grow a file.
 - Put shared settings in `scripts/lib/config.mjs`, never repeat a constant across Node scripts.
 - Compute derived data (titles, labels, statuses) in the Node scripts, not in the page: the site
-  only displays `weeks/<id>.json`.
+  only displays `sprints/<id>.json`.
 - Document every exported function with a short comment saying what it returns.
 - Escape every value inserted in HTML with `esc()` (`site/js/util.js`).
 - Test locally before pushing (below). For site-only changes, reuse an existing `history/`.
@@ -155,7 +166,7 @@ Keys starting with `_` are documentation and ignored.
 - Don't modify FestivAR in any way (see golden rule 1).
 - Don't add npm dependencies without a strong reason (today: only `pngjs`).
 - Don't commit generated files (`site/data/`, `previews.json`, `history/`).
-- Don't store images inside week files or duplicate images: always go through `storeShots`.
+- Don't store images inside sprint files or duplicate images: always go through `storeShots`.
 - Don't make one failing preview fail the whole run: the capture test catches errors per shot.
 - Don't use `getBoundingClientRect` for positions inside the demo phone: it is tilted in 3D;
   use `offset*` (see `site/js/tap.js`).
@@ -167,11 +178,11 @@ Requirements: Node 24, JDK 21, Android SDK (`ANDROID_HOME` or `local.properties`
 ```bash
 npm install
 git clone https://github.com/SwEnt-FestivAR/FestivAR.git festivar      # throwaway clone
-bash scripts/capture.sh festivar origin/main 2026-11-16 history       # ~3 min after Gradle warm-up
+bash scripts/capture.sh festivar origin/main 2026-11-16 history       # ~2-3 min after Gradle warm-up
 node scripts/serve.mjs history                                          # http://localhost:8090
 ```
 
-To get a comparison locally, run `capture.sh` twice with an older ref and date first.
+To get a comparison locally, first run `capture.sh` with an older ref and a date in the previous sprint.
 `GITHUB_TOKEN` (optional) avoids the GitHub API rate limit when fetching PRs.
 
 ## Setup (once)
