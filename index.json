@@ -4,13 +4,13 @@
     "number": 6,
     "start": "2026-11-13T11:00:00.000Z",
     "end": "2026-11-20T11:00:00.000Z",
-    "commit": "2eb9da1481e86c1d5925d257a194c1f23985e83b",
+    "commit": "5caf06d823d01476e5b937f48536d97569a11b92",
     "stats": {
       "newScreens": 0,
-      "changedScreens": 0,
+      "changedScreens": 2,
       "screens": 32,
-      "prs": 6,
-      "contributors": 3,
+      "prs": 18,
+      "contributors": 7,
       "failed": 0
     }
   },
