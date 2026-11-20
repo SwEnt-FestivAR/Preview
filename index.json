@@ -1,5 +1,20 @@
 [
   {
+    "id": "sprint-7",
+    "number": 7,
+    "start": "2026-11-20T11:00:00.000Z",
+    "end": "2026-11-27T11:00:00.000Z",
+    "commit": "6acf3b041d057e5346190ea649d299df62cb2199",
+    "stats": {
+      "newScreens": 0,
+      "changedScreens": 0,
+      "screens": 33,
+      "prs": 0,
+      "contributors": 0,
+      "failed": 0
+    }
+  },
+  {
     "id": "sprint-6",
     "number": 6,
     "start": "2026-11-13T11:00:00.000Z",
