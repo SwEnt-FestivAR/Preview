@@ -26,7 +26,11 @@ Compose) and publishes it to GitHub Pages:
 - the page shows **every** screen and component of the sprint as a card (states, variants,
   before/after, its own demo), grouped: new, changed, touched without visible change, unchanged;
 - a card's **lineup** shows every state of that screen side by side in a full-screen view, in one
-  variant or all of them, now or before (previous sprint); clicking a state selects it in the card;
+  variant or all of them, now or before (previous sprint); clicking a state (or ← / →) selects it
+  in the card; the URL follows it (`#sprint-6/lineup/<group>/<preview fn>`), so it can be shared;
+- the **timeline** (`#timeline`, "All sprints: timeline" in the sprint picker) shows every screen
+  across all saved sprints: one row per state, one column per sprint, a capture only where it
+  differs from the sprint before; clicking one opens that sprint's lineup;
 - the page has a light/dark toggle and links to the previous sprint's demo.
 
 ## Golden rules
@@ -69,13 +73,15 @@ site/                          Static page published to GitHub Pages
   css/base.css                 Theme tokens (light-dark()), base elements, top bar
   css/overview.css             Overview page
   css/lineup.css               Lineup (all states side by side)
+  css/timeline.css             Timeline page
   css/demo.css                 Demo mode
-  js/main.js                   Entry point: loads data, sprint picker, URL hash
+  js/main.js                   Entry point: loads data, sprint picker, URL hash (sprint, demo, lineup, timeline)
   js/theme.js                  Light/dark toggle (saved per browser)
   js/util.js                   DOM/format helpers, variant and status labels
   js/overview.js               Overview sections (header, stats, PRs, other screens)
   js/card.js                   One screen card (states, variants, before/after slider)
   js/lineup.js                 A card's lineup: all its states side by side, to compare
+  js/timeline.js               Timeline page: every screen's states across sprints
   js/steps.js                  Which screens and states a demo walks through (following links)
   js/demo.js                   Demo mode (navigation, autoplay, transitions)
   js/tap.js                    The tapping hand (target choice and animation)

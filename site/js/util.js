@@ -36,6 +36,16 @@ export const prLink = (repo, n) => `<a href="https://github.com/${repo}/pull/${n
 /** Variant ids available for a state, in display order. */
 export const variantsOf = (state) => Object.keys(VARIANTS).filter((v) => state.variants[v]);
 
+/** Fills `el` with one button per value, `current` highlighted; clicking calls `choose(value)`. */
+export function segment(el, values, current, label, choose) {
+  el.innerHTML = '';
+  for (const value of values) {
+    const button = h(`<button class="${value === current ? 'on' : ''}">${esc(label(value))}</button>`);
+    button.onclick = () => choose(value);
+    el.append(button);
+  }
+}
+
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Fetches a JSON file from the data folder. */

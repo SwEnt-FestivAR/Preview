@@ -4,8 +4,12 @@ import { openLineup } from './lineup.js';
 
 const PATH_PREFIX = 'app/src/main/java/com/android/festivar/';
 
-/** Builds the card of `screen`. `onDemo` opens the demo mode on this screen. */
-export function screenCard(screen, repo, onDemo) {
+/**
+ * Builds the card of `screen` (of `sprint`). `onDemo` opens the demo mode on this screen.
+ * The card element gets `openLineup(fn?)`, which opens its lineup on the state of that preview.
+ */
+export function screenCard(screen, sprint, onDemo) {
+  const repo = sprint.repo;
   let state = screen.states.find((s) => s.status !== 'same') || screen.states[0];
   let variant = 'light';
   const prs = screen.prs.length ? `<div class="prs-inline">PRs: ${screen.prs.map((n) => prLink(repo, n)).join(' ')}</div>` : '';
@@ -34,11 +38,17 @@ export function screenCard(screen, repo, onDemo) {
     }, draw);
     fill($('.variants', card), variantsOf(state), (v) => [`<button class="${v === variant ? 'on' : ''}">${VARIANTS[v]}</button>`, () => (variant = v)], draw);
   };
-  $('.lineup-btn', card).onclick = () => openLineup(screen, variant, state, (s, v) => {
-    state = s;
-    variant = v;
+  card.dataset.group = screen.group;
+  card.openLineup = (fn) => {
+    state = screen.states.find((s) => s.fn === fn) || state;
     draw();
-  });
+    openLineup({ screen, sprintId: sprint.id, variant, selected: state, onPick: (s, v) => {
+      state = s;
+      variant = v;
+      draw();
+    } });
+  };
+  $('.lineup-btn', card).onclick = () => card.openLineup();
   draw();
   return card;
 }

@@ -45,7 +45,8 @@ function header(sprint) {
   const previousDemo = sprint.previous
     ? `<a class="prev-sprint" href="#${esc(sprint.previous)}/demo">▶ Sprint ${esc(previousNumber)} demo</a>`
     : '';
-  return h(`<div class="hero"><div class="hero-row"><h1>Sprint ${sprint.number}</h1>${previousDemo}</div>
+  const timeline = sprint.previous ? '<a class="prev-sprint" href="#timeline">⟲ Timeline</a>' : '';
+  return h(`<div class="hero"><div class="hero-row"><h1>Sprint ${sprint.number}</h1><div class="hero-links">${timeline}${previousDemo}</div></div>
     <p>${shortDate(sprint.start)} → ${shortDate(sprint.end)}${commit}${compared}</p></div>`);
 }
 
@@ -63,7 +64,7 @@ function section(title, subtitle, screens, emptyText, sprint, openDemo) {
     return sec;
   }
   const grid = h('<div class="grid"></div>');
-  for (const screen of screens) grid.append(screenCard(screen, sprint.repo, () => openDemo([screen])));
+  for (const screen of screens) grid.append(screenCard(screen, sprint, () => openDemo([screen])));
   sec.append(grid);
   return sec;
 }

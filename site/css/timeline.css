@@ -1,0 +1,28 @@
+/* Timeline page (js/timeline.js): every screen across sprints, a row per state, a column per sprint. */
+.tl-tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 20px 0 8px; position: sticky; top: 59px; z-index: 3; padding: 8px 0; background: var(--bg); }
+.tl-tools .jump { margin-left: auto; max-width: 240px; }
+.tl-screen { margin-top: 28px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); scroll-margin-top: 120px; overflow: hidden; }
+.tl-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; padding: 14px 16px 4px; }
+.tl-head h2 { margin: 0; font-size: 18px; overflow-wrap: anywhere; }
+.tl-head small { color: var(--muted); font-size: 13px; }
+.tl-scroll { overflow-x: auto; padding: 0 0 14px; }
+.tl-grid { display: grid; gap: 12px 16px; align-items: center; padding: 8px 16px 0 0; width: max-content; }
+.tl-corner, .tl-state { position: sticky; left: 0; z-index: 1; background: var(--card); padding: 0 12px 0 16px; align-self: stretch; display: flex; align-items: center; }
+.tl-state { font-size: 13px; font-weight: 500; max-width: 150px; overflow-wrap: anywhere; border-right: 1px solid var(--line); }
+.tl-sprint { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
+.tl-cell { justify-self: start; }
+.tl-none, .tl-same { color: var(--muted); font-size: 13px; min-width: 24px; text-align: center; }
+.tl-same { font-size: 20px; }
+.tl-shot { display: block; padding: 6px; border-radius: 22px; }
+.tl-shot:hover .shot { outline: 3px solid var(--accent); outline-offset: 5px; }
+.tl-shot .shot { max-width: none; }
+.tl-shot .shot img { height: 340px; width: auto; max-height: none; max-width: none; }
+.tl-component .tl-shot .shot img { height: auto; max-height: 150px; max-width: 280px; }
+
+@media (max-width: 520px) {
+  .tl-tools { position: static; }
+  .tl-screen { scroll-margin-top: 70px; }
+  .tl-tools .jump { margin-left: 0; max-width: 100%; }
+  .tl-shot .shot img { height: 240px; }
+  .tl-state { max-width: 90px; padding-left: 12px; }
+}
