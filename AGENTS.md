@@ -25,6 +25,8 @@ Compose) and publishes it to GitHub Pages:
   of new and changed screens; a card's "Play as demo" shows every state of that screen;
 - the page shows **every** screen and component of the sprint as a card (states, variants,
   before/after, its own demo), grouped: new, changed, touched without visible change, unchanged;
+- a card's **lineup** shows every state of that screen side by side in a full-screen view, in one
+  variant or all of them, now or before (previous sprint); clicking a state selects it in the card;
 - the page has a light/dark toggle and links to the previous sprint's demo.
 
 ## Golden rules
@@ -66,12 +68,14 @@ site/                          Static page published to GitHub Pages
   logo.svg                     FestivAR logo (app_logo.xml of the app, coloured), also the favicon
   css/base.css                 Theme tokens (light-dark()), base elements, top bar
   css/overview.css             Overview page
+  css/lineup.css               Lineup (all states side by side)
   css/demo.css                 Demo mode
   js/main.js                   Entry point: loads data, sprint picker, URL hash
   js/theme.js                  Light/dark toggle (saved per browser)
   js/util.js                   DOM/format helpers, variant and status labels
   js/overview.js               Overview sections (header, stats, PRs, other screens)
   js/card.js                   One screen card (states, variants, before/after slider)
+  js/lineup.js                 A card's lineup: all its states side by side, to compare
   js/steps.js                  Which screens and states a demo walks through (following links)
   js/demo.js                   Demo mode (navigation, autoplay, transitions)
   js/tap.js                    The tapping hand (target choice and animation)

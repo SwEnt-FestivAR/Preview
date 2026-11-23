@@ -40,6 +40,8 @@ section > p.sub { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 .seg button { border: 0; border-radius: 0; padding: 4px 10px; font-size: 12px; background: transparent; }
 .seg button.on { background: var(--accent); color: #fff; }
+.card-actions { display: flex; gap: 8px; }
+.card-actions button { flex: 1; }
 .prs-inline { font-size: 12px; color: var(--muted); }
 
 .pr-list { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); }

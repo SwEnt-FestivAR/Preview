@@ -1,5 +1,6 @@
 // One screen card of the overview: screenshot (or before/after slider), state chips, variant switch.
 import { $, h, esc, shotUrl, prLink, variantsOf, STATUS, VARIANTS } from './util.js';
+import { openLineup } from './lineup.js';
 
 const PATH_PREFIX = 'app/src/main/java/com/android/festivar/';
 
@@ -17,9 +18,12 @@ export function screenCard(screen, repo, onDemo) {
     <div class="chips states"></div>
     <div class="seg variants"></div>
     ${prs}
-    <button class="ghost">▶ Play as demo</button>
+    <div class="card-actions">
+      <button class="ghost lineup-btn" title="All states side by side">⇆ Lineup</button>
+      <button class="ghost demo-btn">▶ Play as demo</button>
+    </div>
   </div>`);
-  $('button.ghost', card).onclick = onDemo;
+  $('.demo-btn', card).onclick = onDemo;
 
   const draw = () => {
     if (!state.variants[variant]) variant = 'light';
@@ -30,6 +34,11 @@ export function screenCard(screen, repo, onDemo) {
     }, draw);
     fill($('.variants', card), variantsOf(state), (v) => [`<button class="${v === variant ? 'on' : ''}">${VARIANTS[v]}</button>`, () => (variant = v)], draw);
   };
+  $('.lineup-btn', card).onclick = () => openLineup(screen, variant, state, (s, v) => {
+    state = s;
+    variant = v;
+    draw();
+  });
   draw();
   return card;
 }
