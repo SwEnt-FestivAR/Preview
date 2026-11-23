@@ -67,6 +67,9 @@ function mergeScreens(sprints) {
   return [...list.filter((s) => s.kind === 'screen'), ...list.filter((s) => s.kind !== 'screen')];
 }
 
+/** True when `sprint` has the screen `group`. */
+const hasScreen = (sprint, group) => sprint.screens.some((s) => s.group === group);
+
 /** The state `fn` of `group` in `sprint`, or undefined. */
 const stateIn = (sprint, group, fn) => sprint.screens.find((s) => s.group === group)?.states.find((s) => s.fn === fn);
 
@@ -77,7 +80,7 @@ const stateIn = (sprint, group, fn) => sprint.screens.find((s) => s.group === gr
  * 'missing' (state there but this variant failed), 'absent' (not yet there) or 'removed'.
  */
 function historyOf(screen, order, variant) {
-  const first = order.find((s) => s.screens.some((x) => x.group === screen.group));
+  const first = order.find((s) => hasScreen(s, screen.group));
   return screen.fns.map((fn) => {
     let last = null; // last capture of this state, to compare with
     const cells = order.map((sprint) => {
@@ -98,7 +101,7 @@ function historyOf(screen, order, variant) {
 
 /** One screen: its title, then a grid with a row per state of `rows` and a column per sprint of `order`. */
 function screenBlock(screen, rows, order) {
-  const latest = order.findLast((s) => s.screens.some((x) => x.group === screen.group));
+  const latest = order.findLast((s) => hasScreen(s, screen.group));
   const gone = latest !== order.at(-1) ? ` · removed after Sprint ${latest.number}` : '';
   const block = h(`<section class="tl-screen" id="tl-${esc(screen.group)}">
     <div class="tl-head"><h2>${esc(screen.title)}</h2><small>${screen.kind}${gone}</small></div>

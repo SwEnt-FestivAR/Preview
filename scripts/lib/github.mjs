@@ -1,6 +1,7 @@
 // Merged pull requests of a sprint, from the GitHub REST API (read-only).
 import { MAX_PRS, REPO } from './config.mjs';
 
+/** JSON of a GitHub REST API GET on `url` (a path), authenticated when GITHUB_TOKEN is set; throws on HTTP errors. */
 async function api(url) {
   const headers = { Accept: 'application/vnd.github+json', 'User-Agent': 'weekly-demo' };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;

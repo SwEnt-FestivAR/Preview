@@ -36,6 +36,7 @@ export function renderOverview(main, sprint, openDemo) {
   if (sprint.failed.length) main.append(failures(sprint.failed));
 }
 
+/** Sprint title, dates, FestivAR commit, and links to the timeline and the previous sprint's demo. */
 function header(sprint) {
   const commit = sprint.commit
     ? ` · <a href="https://github.com/${sprint.repo}/commit/${sprint.commit}">${sprint.commit.slice(0, 7)}</a>`
@@ -50,6 +51,7 @@ function header(sprint) {
     <p>${shortDate(sprint.start)} → ${shortDate(sprint.end)}${commit}${compared}</p></div>`);
 }
 
+/** Row of key figures of the sprint (`s` = its stats). */
 function stats(s) {
   const tile = (n, label) => `<div class="stat"><b>${n}</b><span>${label}</span></div>`;
   return h(`<div class="stats">${tile(s.newScreens, 'new screens')}${tile(s.changedScreens, 'changed screens')}
@@ -69,6 +71,7 @@ function section(title, subtitle, screens, emptyText, sprint, openDemo) {
   return sec;
 }
 
+/** List of the PRs merged during the sprint, tagged with the number of screens they touched. */
 function pullRequests(sprint) {
   const sec = h(`<section><h2>Merged this sprint</h2>
     <p class="sub">${sprint.prs.length} PRs. Those touching a screen are tagged.</p></section>`);
@@ -85,6 +88,7 @@ function pullRequests(sprint) {
   return sec;
 }
 
+/** Collapsed list of the captures that failed, with their errors. */
 function failures(failed) {
   const rows = failed.map((f) => `<div class="fail">${esc(f.id)} @${esc(f.variant)}: ${esc(f.error)}</div>`).join('');
   return h(`<section><details><summary>${failed.length} capture(s) failed</summary>

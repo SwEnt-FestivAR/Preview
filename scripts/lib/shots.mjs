@@ -32,6 +32,7 @@ export function storeShots(capturesDir, previews, historyDir) {
   return { shots, failed };
 }
 
+/** Parsed metadata JSON written by the capture test, or a failure entry when it is missing or invalid. */
 function readMeta(file) {
   try {
     return JSON.parse(fs.readFileSync(file, 'utf8'));

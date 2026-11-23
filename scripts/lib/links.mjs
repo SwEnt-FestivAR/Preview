@@ -47,6 +47,10 @@ function similarity(a, b) {
   return common / (x.size + y.size - common || 1);
 }
 
+/**
+ * The most plausible link from `state` of `screen`: `{ to: <state id>, tap }` for its tap box whose
+ * label best matches one of `targets` (states of other screens that do not look alike), or null.
+ */
 function bestLink(screen, state, targets, seenOn) {
   let best = null;
   let bestScore = 0;
@@ -62,6 +66,10 @@ function bestLink(screen, state, targets, seenOn) {
   return best;
 }
 
+/**
+ * How well a tap `label` names a target state: +2 per text of the target found in the label (skipping
+ * short texts and texts shown on more than two screens, see `seenOn`), +3 when it names the target's title.
+ */
 function linkScore(label, { screen, state }, seenOn) {
   let score = 0;
   const texts = (state.variants.light.texts || []).map(norm);

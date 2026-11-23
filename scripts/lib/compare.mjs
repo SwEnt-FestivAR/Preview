@@ -26,6 +26,11 @@ export function buildScreens(previews, shots, previous, historyDir) {
   });
 }
 
+/**
+ * The sprint-file state of `preview`: 'new' when it is not in `before` (previous sprint's states by
+ * id), 'changed' when its light capture differs by more than CHANGE_THRESHOLD (with the diff in % and
+ * the previous images), else 'same'. Without `before` (baseline sprint) every state is 'same'.
+ */
 function compareState(preview, label, variants, before, historyDir) {
   const state = { id: preview.id, fn: preview.fn, label, variants, status: 'same', diff: 0 };
   if (!before) return state;

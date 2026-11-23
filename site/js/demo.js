@@ -1,12 +1,13 @@
 // Demo mode: a floating phone that walks through screens state by state, with a hand tapping the
 // element that leads to the next state. ← / → (or the arrows) move, space toggles autoplay,
 // Escape closes.
-import { $, h, esc, shotUrl, prLink, variantsOf, sleep, STATUS, VARIANTS } from './util.js';
+import { $, h, esc, shotUrl, prLink, segment, variantsOf, sleep, STATUS, VARIANTS } from './util.js';
 import { pickTap, animateTap, hideHand } from './tap.js';
 import { buildSteps } from './steps.js';
 
 const AUTOPLAY_MS = 3200;
 
+/** The demo mode (one at a time): its state and the methods that drive the #demo block of index.html. */
 export const Demo = {
   sprint: null,
   overrides: {},
@@ -29,6 +30,7 @@ export const Demo = {
     this.show(true);
   },
 
+  /** Hides the demo, stops autoplay and drops the /demo suffix from the URL hash. */
   close() {
     this.stopAutoplay();
     $('#demo').hidden = true;
@@ -36,6 +38,7 @@ export const Demo = {
     if (location.hash.endsWith('/demo')) history.replaceState(null, '', `#${this.sprint.id}`);
   },
 
+  /** Keyboard shortcuts while the demo is open: ← / → move, Escape closes, space toggles autoplay. */
   onKey(e) {
     if ($('#demo').hidden) return;
     if (e.key === 'ArrowRight') this.go(1);
@@ -47,6 +50,7 @@ export const Demo = {
     }
   },
 
+  /** Starts autoplay (one step every AUTOPLAY_MS, stopping at the end) or stops it. */
   toggleAutoplay() {
     if (this.timer) return this.stopAutoplay();
     $('#demo-auto').textContent = '⏸ Pause';
@@ -60,6 +64,7 @@ export const Demo = {
     tick();
   },
 
+  /** Stops autoplay and resets its button. */
   stopAutoplay() {
     clearTimeout(this.timer);
     this.timer = null;
@@ -109,6 +114,10 @@ export const Demo = {
     this.showControls(step, variant);
   },
 
+  /**
+   * Puts the step's capture on the phone, sliding the old one out in direction `dir`. A changed state
+   * (`step.wipe`) first shows its previous-sprint capture, then wipes in the new one.
+   */
   showImage(step, variant, dir) {
     const screen = $('#screen');
     screen.style.background = variant === 'dark' ? '#121212' : '#fff';
@@ -137,6 +146,7 @@ export const Demo = {
     sleep(1900).then(() => line.remove());
   },
 
+  /** Fills the caption beside the phone: position, screen, state, status, notes, PRs, replay button. */
   showCaption(step) {
     const { screen, state, k, n, wipe } = step;
     const previous = this.steps[this.i - 1];
@@ -159,16 +169,12 @@ export const Demo = {
     if (replay) replay.onclick = () => this.showImage(step, this.variantOf(step), 0);
   },
 
+  /** Updates the variant switch, the progress bar and the arrows for the step. */
   showControls(step, variant) {
-    const seg = $('#demo-variant');
-    seg.innerHTML = '';
-    for (const v of variantsOf(step.state)) {
-      const button = seg.appendChild(h(`<button class="${v === variant ? 'on' : ''}">${VARIANTS[v]}</button>`));
-      button.onclick = () => {
-        this.variant = v;
-        this.show(true);
-      };
-    }
+    segment($('#demo-variant'), variantsOf(step.state), variant, (v) => VARIANTS[v], (v) => {
+      this.variant = v;
+      this.show(true);
+    });
     $('#demo-bar').style.width = `${((this.i + 1) / this.steps.length) * 100}%`;
     $('#prev').style.visibility = this.i > 0 ? 'visible' : 'hidden';
     $('#next').style.visibility = this.i < this.steps.length - 1 ? 'visible' : 'hidden';

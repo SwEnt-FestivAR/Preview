@@ -4,6 +4,7 @@ import { $ } from './util.js';
 
 const KEY = 'weekly-demo-theme';
 
+/** Theme chosen with the toggle in this browser ('light' / 'dark'), or null. */
 function saved() {
   try {
     return localStorage.getItem(KEY);
@@ -12,10 +13,12 @@ function saved() {
   }
 }
 
+/** Theme to show: the saved choice, else the system theme. */
 function current() {
   return saved() || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 }
 
+/** Applies `theme` to the page and updates the toggle's icon and tooltip. */
 function apply(theme) {
   document.documentElement.dataset.theme = theme;
   const button = $('#theme');
