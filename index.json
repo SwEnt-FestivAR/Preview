@@ -4,13 +4,13 @@
     "number": 7,
     "start": "2026-11-20T11:00:00.000Z",
     "end": "2026-11-27T11:00:00.000Z",
-    "commit": "6acf3b041d057e5346190ea649d299df62cb2199",
+    "commit": "26faf98086d6c15af010469fc2129cba9623dd21",
     "stats": {
-      "newScreens": 0,
+      "newScreens": 2,
       "changedScreens": 0,
-      "screens": 33,
-      "prs": 0,
-      "contributors": 0,
+      "screens": 34,
+      "prs": 4,
+      "contributors": 4,
       "failed": 0
     }
   },
@@ -19,12 +19,12 @@
     "number": 6,
     "start": "2026-11-13T11:00:00.000Z",
     "end": "2026-11-20T11:00:00.000Z",
-    "commit": "f7df98e0a9138e4199419fb29303291f81cd6f9f",
+    "commit": "6acf3b041d057e5346190ea649d299df62cb2199",
     "stats": {
       "newScreens": 2,
       "changedScreens": 4,
       "screens": 33,
-      "prs": 34,
+      "prs": 35,
       "contributors": 7,
       "failed": 0
     }
