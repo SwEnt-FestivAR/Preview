@@ -9,8 +9,6 @@
 .tile { flex: none; display: flex; flex-direction: column; gap: 10px; padding: 10px; border-radius: var(--radius); border: 2px solid transparent; }
 .tile.on { border-color: var(--accent); background: var(--accent-bg); }
 .tile-label { font-size: 14px; font-weight: 500; }
-.tile-label i { font-style: normal; width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-left: 6px; vertical-align: 1px; }
-.tile-label i.new { background: var(--new); } .tile-label i.changed { background: var(--chg); }
 .tile-shots { display: flex; gap: 14px; }
 .tile-shot { padding: 6px; border: 0; background: transparent; border-radius: 22px; }
 .tile-shot:hover .shot { outline: 3px solid var(--accent); outline-offset: 6px; }

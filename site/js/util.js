@@ -36,6 +36,12 @@ export const prLink = (repo, n) => `<a href="https://github.com/${repo}/pull/${n
 /** Variant ids available for a state, in display order. */
 export const variantsOf = (state) => Object.keys(VARIANTS).filter((v) => state.variants[v]);
 
+/** Small coloured dot marking a new or changed state (empty string for an unchanged one). */
+export const statusDot = (status) => (status === 'new' || status === 'changed' ? `<i class="dot ${status}"></i>` : '');
+
+/** Class of the frame around a capture: a phone frame for screens, a thin border for components. */
+export const frameClass = (kind) => (kind === 'component' ? 'shot component' : 'shot');
+
 /** Fills `el` with one button per value, `current` highlighted; clicking calls `choose(value)`. */
 export function segment(el, values, current, label, choose) {
   el.innerHTML = '';
@@ -46,6 +52,7 @@ export function segment(el, values, current, label, choose) {
   }
 }
 
+/** Promise resolved after `ms` milliseconds. */
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Fetches a JSON file from the data folder. */

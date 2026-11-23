@@ -3,12 +3,12 @@
 // changed states can show their previous-sprint image. Clicking a state (or ← / →) selects it in
 // the card. The URL hash follows it (#<sprint>/lineup/<group>/<preview fn>), so the link can be
 // shared. Escape closes.
-import { $, h, esc, shotUrl, segment, variantsOf, VARIANTS } from './util.js';
+import { $, h, esc, shotUrl, segment, statusDot, frameClass, variantsOf, VARIANTS } from './util.js';
 
-/** Hash of the lineup of `group` in `sprintId`, on the state whose preview function is `fn`. */
+/** URL hash of the lineup of `group` in `sprintId`, on the state whose preview function is `fn`. */
 export const lineupHash = (sprintId, group, fn) => `#${sprintId}/lineup/${encodeURIComponent(group)}${fn ? `/${encodeURIComponent(fn)}` : ''}`;
 
-let closeCurrent = null;
+let closeCurrent = null; // closes the open lineup (only one at a time), or null
 
 /** Closes the open lineup, if any, leaving the URL hash as it is (the page is navigating). */
 export const closeLineup = () => closeCurrent?.(true);
@@ -37,6 +37,7 @@ export function openLineup({ screen, sprintId, variant, selected, onPick }) {
     <div class="lineup-row"></div>
   </div>`);
 
+  // replaceState, not location.hash: the page must not route again (route() would close the lineup).
   const setHash = () => history.replaceState(null, '', lineupHash(sprintId, screen.group, selected.fn));
   const close = (keepHash) => {
     box.remove();
@@ -46,6 +47,7 @@ export function openLineup({ screen, sprintId, variant, selected, onPick }) {
     if (!keepHash) history.replaceState(null, '', `#${sprintId}`);
   };
   closeCurrent = close;
+  // Selects `state` shown in variant `v`: in the card, in the URL and in the lineup.
   const pick = (state, v) => {
     selected = state;
     picked = v;
@@ -65,13 +67,14 @@ export function openLineup({ screen, sprintId, variant, selected, onPick }) {
   };
   $('.close', box).onclick = () => close();
   $('.copy', box).onclick = async (e) => {
+    const button = e.currentTarget;
     try {
       await navigator.clipboard.writeText(location.href);
-      e.target.textContent = '✓ Copied';
+      button.textContent = '✓ Copied';
     } catch {
-      e.target.textContent = 'Copy the address bar';
+      button.textContent = 'Copy the address bar'; // clipboard refused (permissions, insecure origin)
     }
-    setTimeout(() => (e.target.textContent = '🔗 Link'), 1800);
+    setTimeout(() => (button.textContent = '🔗 Link'), 1800);
   };
 
   const draw = () => {
@@ -93,16 +96,16 @@ export function openLineup({ screen, sprintId, variant, selected, onPick }) {
 /** One column of the lineup: the state's label and its image(s) for `mode` (a variant or 'all'). */
 function stateTile(screen, state, mode, before, on, pick) {
   const variants = mode === 'all' ? variantsOf(state) : state.variants[mode] ? [mode] : [];
-  const dot = state.status !== 'same' ? `<i class="${state.status}"></i>` : '';
   const diff = state.status === 'changed' ? ` <span class="muted">${state.diff}%</span>` : '';
   const tile = h(`<div class="tile${on ? ' on' : ''}">
-    <div class="tile-label">${esc(state.label)}${dot}${diff}</div>
+    <div class="tile-label">${esc(state.label)}${statusDot(state.status)}${diff}</div>
     <div class="tile-shots"></div>
   </div>`);
-  const frame = screen.kind === 'component' ? 'shot component' : 'shot';
+  const frame = frameClass(screen.kind);
   for (const v of variants) {
     const old = before ? state.before?.[v] : null;
     const img = old || state.variants[v].img;
+    // Small label on the capture: its variant in "All" mode, and what "Before" shows for it.
     const tag = [mode === 'all' ? VARIANTS[v] : '', before ? (old ? 'Before' : state.status === 'new' ? 'New' : 'Unchanged') : '']
       .filter(Boolean).join(' · ');
     const shot = h(`<button class="tile-shot" title="Select ${esc(state.label)} · ${esc(VARIANTS[v])}">

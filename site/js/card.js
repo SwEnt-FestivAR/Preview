@@ -1,5 +1,5 @@
 // One screen card of the overview: screenshot (or before/after slider), state chips, variant switch.
-import { $, h, esc, shotUrl, prLink, variantsOf, STATUS, VARIANTS } from './util.js';
+import { $, h, esc, shotUrl, prLink, segment, statusDot, frameClass, variantsOf, STATUS, VARIANTS } from './util.js';
 import { openLineup } from './lineup.js';
 
 const PATH_PREFIX = 'app/src/main/java/com/android/festivar/';
@@ -32,11 +32,8 @@ export function screenCard(screen, sprint, onDemo) {
   const draw = () => {
     if (!state.variants[variant]) variant = 'light';
     drawViewer($('.viewer', card), screen, state, variant);
-    fill($('.states', card), screen.states, (s) => {
-      const dot = s.status !== 'same' ? `<i class="${s.status}"></i>` : '';
-      return [`<button class="chip${s === state ? ' on' : ''}">${esc(s.label)}${dot}</button>`, () => (state = s)];
-    }, draw);
-    fill($('.variants', card), variantsOf(state), (v) => [`<button class="${v === variant ? 'on' : ''}">${VARIANTS[v]}</button>`, () => (variant = v)], draw);
+    drawChips($('.states', card), screen.states, state, (s) => ((state = s), draw()));
+    segment($('.variants', card), variantsOf(state), variant, (v) => VARIANTS[v], (v) => ((variant = v), draw()));
   };
   card.dataset.group = screen.group;
   card.openLineup = (fn) => {
@@ -53,17 +50,13 @@ export function screenCard(screen, sprint, onDemo) {
   return card;
 }
 
-/** Replaces the children of `el` by one button per item; clicking runs its action then `redraw`. */
-function fill(el, items, toButton, redraw) {
+/** Fills `el` with one chip per state (with its status dot), `current` highlighted; clicking calls `choose(state)`. */
+function drawChips(el, states, current, choose) {
   el.innerHTML = '';
-  for (const item of items) {
-    const [html, action] = toButton(item);
-    const button = h(html);
-    button.onclick = () => {
-      action();
-      redraw();
-    };
-    el.append(button);
+  for (const s of states) {
+    const chip = h(`<button class="chip${s === current ? ' on' : ''}">${esc(s.label)}${statusDot(s.status)}</button>`);
+    chip.onclick = () => choose(s);
+    el.append(chip);
   }
 }
 
@@ -71,7 +64,7 @@ function fill(el, items, toButton, redraw) {
 function drawViewer(el, screen, state, variant) {
   const current = state.variants[variant];
   const before = state.before?.[variant];
-  const frame = screen.kind === 'component' ? 'shot component' : 'shot';
+  const frame = frameClass(screen.kind);
   if (!before || before === current.img) {
     el.innerHTML = `<div class="${frame}"><img src="${shotUrl(current.img)}" alt="${esc(state.label)}"></div>`;
     return;
