@@ -4,12 +4,12 @@
     "number": 7,
     "start": "2026-11-20T11:00:00.000Z",
     "end": "2026-11-27T11:00:00.000Z",
-    "commit": "2d28da14d04ba17ed97a9b071b0e367b0ae62404",
+    "commit": "9dd7bb6b2248e98652a7411af3a1f4c5176f6eb7",
     "stats": {
-      "newScreens": 7,
-      "changedScreens": 0,
-      "screens": 39,
-      "prs": 19,
+      "newScreens": 10,
+      "changedScreens": 6,
+      "screens": 42,
+      "prs": 36,
       "contributors": 7,
       "failed": 0
     }
